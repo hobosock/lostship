@@ -70,9 +70,12 @@ pub fn ui(frame: &mut Frame, app: &App) {
     let version = Title::from(Line::from(vec![" Lost Ship v0.1.0 ".into()]));
     let main_block = Block::default()
         .title(
-            Title::from(Line::from(app.name.clone()))
-                .alignment(Alignment::Center)
-                .position(Position::Top),
+            Title::from(
+                Line::from(format!("| {} |", app.name.clone()))
+                    .style(Style::default().cyan().bold()),
+            )
+            .alignment(Alignment::Center)
+            .position(Position::Top),
         )
         .title(
             version
@@ -89,6 +92,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
     // change bottom two chunks based on selected tab
     match app.active_tab {
         MenuTabs::Status => {
+            // TODO: change color based on number, status
             main_text = Text::from(vec![
                 Line::from(vec![
                     "LEAPS SINCE INCIDENT: ".into(),
@@ -96,6 +100,30 @@ pub fn ui(frame: &mut Frame, app: &App) {
                 ]),
                 Line::from(vec!["Fuel: ".into(), app.fuel.to_string().into()]),
                 Line::from(vec!["Parts: ".into(), app.parts.to_string().into()]),
+                Line::from(vec![
+                    "Hull Damage: ".into(),
+                    app.hull_damage.to_string().into(),
+                ]),
+                Line::from(vec![
+                    "Engines: ".into(),
+                    format!("{}", app.engine.status).into(),
+                ]),
+                Line::from(vec![
+                    "Mining Laser: ".into(),
+                    format!("{}", app.mining_laser.status).into(),
+                ]),
+                Line::from(vec![
+                    "Scout Bay: ".into(),
+                    format!("{}", app.scout_bay.status).into(),
+                ]),
+                Line::from(vec![
+                    "Sick Bay: ".into(),
+                    format!("{}", app.sick_bay.status).into(),
+                ]),
+                Line::from(vec![
+                    "Sensors: ".into(),
+                    format!("{}", app.sensors.status).into(),
+                ]),
             ]);
         }
         MenuTabs::Log => {}
@@ -113,7 +141,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
     let instructions = Paragraph::new(instructions_text)
         .centered()
         .block(instructions_block);
-    let main_thing = Paragraph::new(main_text).centered().block(main_block);
+    let main_thing = Paragraph::new(main_text).block(main_block);
 
     // render
     frame.render_widget(tabs, chunks[0]);

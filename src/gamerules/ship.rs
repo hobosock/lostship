@@ -1,3 +1,5 @@
+use core::fmt;
+
 use super::pilot::Pilot;
 
 /// SubSystem status (100/66/33/0%)
@@ -12,6 +14,18 @@ pub enum Status {
 impl Default for Status {
     fn default() -> Self {
         Status::Normal
+    }
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            Status::Normal => "Normal",
+            Status::Serviceable => "Serviceable",
+            Status::BarelyFunctioning => "Barely Functioning",
+            Status::Inoperable => "Inoperable",
+        };
+        write!(f, "{}", printable)
     }
 }
 
@@ -33,8 +47,8 @@ impl Default for ShipDamage {
 /// represents each subsystem, tracks status and upgrade
 #[derive(Debug)]
 pub struct SubSystem {
-    status: Status,
-    upgrade: bool,
+    pub status: Status,
+    pub upgrade: bool,
 }
 
 impl Default for SubSystem {
@@ -49,8 +63,8 @@ impl Default for SubSystem {
 /// represents each scout ship, tracks damage and name
 #[derive(Debug, Clone)]
 pub struct Ship {
-    name: String,
-    damage: ShipDamage,
+    pub name: String,
+    pub damage: ShipDamage,
 }
 
 impl Default for Ship {
@@ -65,9 +79,9 @@ impl Default for Ship {
 /// Scout struct with Pilot, Ship, and Position
 #[derive(Debug, Clone)]
 pub struct Scout {
-    position: u64,
-    ship: Ship,
-    pilot: Pilot,
+    pub position: u64,
+    pub ship: Ship,
+    pub pilot: Pilot,
 }
 
 impl Default for Scout {
