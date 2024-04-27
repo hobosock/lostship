@@ -66,19 +66,14 @@ pub fn ui(frame: &mut Frame, app: &App) {
     .style(Style::default().white())
     .highlight_style(Style::default().cyan().bold())
     .select(app.active_tab as usize);
-
-    // change bottom two chunks based on selected tab
-    match app.active_tab {
-        MenuTabs::Status => {}
-        MenuTabs::Log => {}
-        MenuTabs::Hangar => {}
-        MenuTabs::Crew => {}
-        MenuTabs::About => {}
-        MenuTabs::Help => {}
-    };
     // main/center panel for display
     let version = Title::from(Line::from(vec![" Lost Ship v0.1.0 ".into()]));
     let main_block = Block::default()
+        .title(
+            Title::from(Line::from(app.name.clone()))
+                .alignment(Alignment::Center)
+                .position(Position::Top),
+        )
         .title(
             version
                 .alignment(Alignment::Center)
@@ -88,13 +83,40 @@ pub fn ui(frame: &mut Frame, app: &App) {
         .border_set(border::THICK);
     // bottom panel to display keys
     let instructions_block = Block::default().borders(Borders::ALL);
-    let instructions_text = Text::from(vec![Line::from(vec!["<Q> Quit".into()])]);
+    let mut instructions_text = Text::from(vec![Line::from(vec!["<Q> Quit".into()])]);
+    let mut main_text = Text::from(vec![Line::from(vec!["Placeholder".into()])]);
+
+    // change bottom two chunks based on selected tab
+    match app.active_tab {
+        MenuTabs::Status => {
+            main_text = Text::from(vec![
+                Line::from(vec![
+                    "LEAPS SINCE INCIDENT: ".into(),
+                    app.leaps_since_incident.to_string().into(),
+                ]),
+                Line::from(vec!["Fuel: ".into(), app.fuel.to_string().into()]),
+                Line::from(vec!["Parts: ".into(), app.parts.to_string().into()]),
+            ]);
+        }
+        MenuTabs::Log => {}
+        MenuTabs::Hangar => {}
+        MenuTabs::Crew => {}
+        MenuTabs::About => {}
+        MenuTabs::Help => {
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q> Quit".into(),
+                "<1-6> Change Tab".into(),
+            ])]);
+        }
+    };
+
     let instructions = Paragraph::new(instructions_text)
         .centered()
         .block(instructions_block);
+    let main_thing = Paragraph::new(main_text).centered().block(main_block);
 
     // render
     frame.render_widget(tabs, chunks[0]);
-    frame.render_widget(main_block, chunks[1]);
+    frame.render_widget(main_thing, chunks[1]);
     frame.render_widget(instructions, chunks[2]);
 }

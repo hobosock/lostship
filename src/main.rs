@@ -1,9 +1,4 @@
 // external dependencies
-use ratatui::{
-    prelude::*,
-    symbols::border,
-    widgets::{block::*, *},
-};
 use std::io;
 
 // local inclusions
