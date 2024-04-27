@@ -54,11 +54,28 @@ pub fn ui(frame: &mut Frame, app: &App) {
         ])
         .split(frame.size());
     // tabs for switching between menus
-    let tabs = Tabs::new(vec!["Status", "Log", "Hangar", "Crew", "About", "Help"])
-        .block(Block::default().title("Menu").borders(Borders::ALL))
-        .style(Style::default().white())
-        .highlight_style(Style::default().cyan().bold())
-        .select(app.active_tab as usize);
+    let tabs = Tabs::new(vec![
+        "1. Status",
+        "2. Log",
+        "3. Hangar",
+        "4. Crew",
+        "5. About",
+        "6. Help",
+    ])
+    .block(Block::default().title("Menu").borders(Borders::ALL))
+    .style(Style::default().white())
+    .highlight_style(Style::default().cyan().bold())
+    .select(app.active_tab as usize);
+
+    // change bottom two chunks based on selected tab
+    match app.active_tab {
+        MenuTabs::Status => {}
+        MenuTabs::Log => {}
+        MenuTabs::Hangar => {}
+        MenuTabs::Crew => {}
+        MenuTabs::About => {}
+        MenuTabs::Help => {}
+    };
     // main/center panel for display
     let version = Title::from(Line::from(vec![" Lost Ship v0.1.0 ".into()]));
     let main_block = Block::default()
