@@ -125,9 +125,13 @@ pub fn ui(frame: &mut Frame, app: &App) {
                     format!("{}", app.sensors.status).into(),
                 ]),
             ]);
+            let main_thing = Paragraph::new(main_text).block(main_block);
+            frame.render_widget(main_thing, chunks[1]);
         }
         MenuTabs::Log => {}
-        MenuTabs::Hangar => {}
+        MenuTabs::Hangar => {
+            draw_main_hangar_tab(app, frame, chunks[1], main_block);
+        }
         MenuTabs::Crew => {}
         MenuTabs::About => {}
         MenuTabs::Help => {
@@ -141,10 +145,38 @@ pub fn ui(frame: &mut Frame, app: &App) {
     let instructions = Paragraph::new(instructions_text)
         .centered()
         .block(instructions_block);
-    let main_thing = Paragraph::new(main_text).block(main_block);
 
     // render
     frame.render_widget(tabs, chunks[0]);
-    frame.render_widget(main_thing, chunks[1]);
     frame.render_widget(instructions, chunks[2]);
+}
+
+fn draw_main_log_tab(app: &App) {
+    // table with a row for each leap?
+}
+
+fn draw_main_hangar_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // TODO: build rows iteratively - or just hard program, it's a fixed number
+    let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
+        .style(Style::default().cyan().bold())
+        .bottom_margin(1);
+    let rows = [Row::new(vec![
+        "Flight Position",
+        "Ship Name",
+        "Pilot",
+        "Damage",
+    ])];
+    let widths = [
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+    ];
+    let table = Table::new(rows, widths)
+        .column_spacing(1)
+        .header(header_row)
+        .block(main_block)
+        .highlight_style(Style::default().reversed())
+        .highlight_symbol(">>");
+    frame.render_widget(table, chunk);
 }
