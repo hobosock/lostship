@@ -1,12 +1,16 @@
 use crossterm::{execute, terminal::*};
 use ratatui::{
     prelude::*,
+    style::Stylize,
     symbols::border,
     widgets::{block::*, *},
 };
 use std::io::{self, stdout, Stdout};
 
-use crate::app::App;
+use crate::{
+    app::App,
+    gamerules::{pilot::Rank, ship::ShipDamage},
+};
 
 /// a type alias for the terminal type used
 pub type Tui = Terminal<CrosstermBackend<Stdout>>;
@@ -156,16 +160,37 @@ fn draw_main_log_tab(app: &App) {
 }
 
 fn draw_main_hangar_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
-    // TODO: build rows iteratively - or just hard program, it's a fixed number
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
-    let rows = [Row::new(vec![
-        "Flight Position",
-        "Ship Name",
-        "Pilot",
-        "Damage",
-    ])];
+    let mut rows = [
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+    ];
+    for (i, scout) in app.scouts.iter().enumerate() {
+        let damage_text = match scout.ship.damage {
+            ShipDamage::Normal => scout.ship.damage.to_string().green(),
+            ShipDamage::Half => scout.ship.damage.to_string().yellow(),
+            ShipDamage::Inoperable => scout.ship.damage.to_string().red(),
+            ShipDamage::Destroyed => scout.ship.damage.to_string().red().underlined(),
+        };
+        let pilot_text = match scout.pilot.rank {
+            Rank::Rookie => scout.pilot.name.clone().white(),
+            Rank::Veteran => format!("|V| {}", scout.pilot.name).blue(),
+            Rank::Ace => format!("|A| {}", scout.pilot.name).green(),
+        };
+        let row = Row::new(vec![
+            Cell::from(scout.position.to_string()),
+            Cell::from(scout.ship.name.clone()),
+            Cell::from(pilot_text),
+            Cell::from(damage_text),
+        ]);
+        rows[i] = row;
+    }
     let widths = [
         Constraint::Percentage(25),
         Constraint::Percentage(25),

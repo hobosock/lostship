@@ -44,6 +44,18 @@ impl Default for ShipDamage {
     }
 }
 
+impl fmt::Display for ShipDamage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            ShipDamage::Normal => "Normal",
+            ShipDamage::Half => "Half",
+            ShipDamage::Inoperable => "Inoperable",
+            ShipDamage::Destroyed => "Destroyed",
+        };
+        write!(f, "{}", printable)
+    }
+}
+
 /// represents each subsystem, tracks status and upgrade
 #[derive(Debug)]
 pub struct SubSystem {

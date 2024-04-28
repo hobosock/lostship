@@ -26,11 +26,11 @@ impl Default for Rank {
 
 #[derive(Debug, Clone)]
 pub struct Pilot {
-    name: String,
-    kills: u64,
-    rank: Rank,
-    status: PilotStatus,
-    injury_timer: u64,
+    pub name: String,
+    pub kills: u64,
+    pub rank: Rank,
+    pub status: PilotStatus,
+    pub injury_timer: u64,
 }
 
 impl Default for Pilot {
