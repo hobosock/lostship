@@ -9,7 +9,11 @@ use std::io::{self, stdout, Stdout};
 
 use crate::{
     app::App,
-    gamerules::{pilot::Rank, ship::ShipDamage},
+    gamerules::{
+        pilot::{PilotStatus, Rank},
+        ship::ShipDamage,
+    },
+    resources::{about::ABOUT_STR, help::HELP_STR},
 };
 
 /// a type alias for the terminal type used
@@ -136,12 +140,19 @@ pub fn ui(frame: &mut Frame, app: &App) {
         MenuTabs::Hangar => {
             draw_main_hangar_tab(app, frame, chunks[1], main_block);
         }
-        MenuTabs::Crew => {}
-        MenuTabs::About => {}
+        MenuTabs::Crew => {
+            draw_main_crew_tab(app, frame, chunks[1], main_block);
+        }
+        MenuTabs::About => {
+            draw_main_about_tab(frame, chunks[1], main_block);
+        }
         MenuTabs::Help => {
+            draw_main_help_tab(frame, chunks[1], main_block);
             instructions_text = Text::from(vec![Line::from(vec![
-                "<Q> Quit".into(),
-                "<1-6> Change Tab".into(),
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<1-6>".yellow().bold(),
+                " Change Tab".into(),
             ])]);
         }
     };
@@ -204,4 +215,70 @@ fn draw_main_hangar_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
         .highlight_style(Style::default().reversed())
         .highlight_symbol(">>");
     frame.render_widget(table, chunk);
+}
+
+/// renders the main block for the Crew tab
+fn draw_main_crew_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    let header_row = Row::new(vec!["Name", "Kills", "Rank", "Status", "Leaps Injured"])
+        .style(Style::default().cyan().bold())
+        .bottom_margin(1);
+    let mut rows = [
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+        Row::default(),
+    ];
+    for (i, pilot) in app.pilots.iter().enumerate() {
+        let rank_text = match pilot.rank {
+            Rank::Rookie => pilot.rank.to_string().white(),
+            Rank::Veteran => pilot.rank.to_string().cyan(),
+            Rank::Ace => pilot.rank.to_string().green(),
+        };
+        let injured_text = match pilot.status {
+            PilotStatus::Normal => pilot.status.to_string().green(),
+            PilotStatus::Injured => pilot.status.to_string().yellow(),
+            PilotStatus::KIA => pilot.status.to_string().red(),
+        };
+        // TODO: color leaps injured row?
+        let row = Row::new(vec![
+            Cell::from(pilot.name.clone()),
+            Cell::from(pilot.kills.to_string()),
+            Cell::from(rank_text),
+            Cell::from(injured_text),
+            Cell::from(pilot.injury_timer.to_string()),
+        ]);
+        rows[i] = row;
+    }
+    let widths = [
+        Constraint::Percentage(20),
+        Constraint::Percentage(20),
+        Constraint::Percentage(20),
+        Constraint::Percentage(20),
+        Constraint::Percentage(20),
+    ];
+    let table = Table::new(rows, widths)
+        .column_spacing(1)
+        .header(header_row)
+        .block(main_block)
+        .highlight_style(Style::default().reversed())
+        .highlight_symbol(">>");
+    frame.render_widget(table, chunk);
+}
+
+/// renders main block for About tab
+fn draw_main_about_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
+    let paragraph = Paragraph::new(ABOUT_STR)
+        .wrap(Wrap { trim: false })
+        .block(main_block);
+    frame.render_widget(paragraph, chunk);
+}
+
+/// renders main block for Help tab
+fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
+    let paragraph = Paragraph::new(HELP_STR)
+        .wrap(Wrap { trim: false })
+        .block(main_block);
+    frame.render_widget(paragraph, chunk);
 }

@@ -4,6 +4,7 @@ use std::io;
 // local inclusions
 mod app;
 mod gamerules;
+mod resources;
 mod tui;
 use app::App;
 

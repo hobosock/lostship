@@ -1,3 +1,5 @@
+use core::fmt;
+
 #[derive(Debug, Clone)]
 pub enum PilotStatus {
     Normal,
@@ -11,11 +13,33 @@ impl Default for PilotStatus {
     }
 }
 
+impl fmt::Display for PilotStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            PilotStatus::Normal => "Normal",
+            PilotStatus::Injured => "Injured",
+            PilotStatus::KIA => "KIA",
+        };
+        write!(f, "{}", printable)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Rank {
     Rookie,
     Veteran,
     Ace,
+}
+
+impl fmt::Display for Rank {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            Rank::Rookie => "Rookie",
+            Rank::Veteran => "Veteran",
+            Rank::Ace => "Ace",
+        };
+        write!(f, "{}", printable)
+    }
 }
 
 impl Default for Rank {

@@ -1,5 +1,6 @@
 use crate::{
     gamerules::{
+        pilot::Pilot,
         ship::{Scout, SubSystem},
         Leap,
     },
@@ -28,6 +29,7 @@ pub struct App {
     pub sensors: SubSystem,
     pub scouts: [Scout; 6],
     pub log: Vec<Leap>,
+    pub pilots: [Pilot; 6],
 }
 
 impl Default for App {
@@ -56,6 +58,14 @@ impl Default for App {
                 Scout::default(),
             ],
             log: vec![Leap::default()],
+            pilots: [
+                Pilot::default(),
+                Pilot::default(),
+                Pilot::default(),
+                Pilot::default(),
+                Pilot::default(),
+                Pilot::default(),
+            ],
         }
     }
 }
