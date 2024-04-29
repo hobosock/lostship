@@ -20,20 +20,15 @@ use crate::{
 pub type Tui = Terminal<CrosstermBackend<Stdout>>;
 
 /// tabs for main TUI interface
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum MenuTabs {
+    #[default]
     Status,
     Log,
     Hangar,
     Crew,
     About,
     Help,
-}
-
-impl Default for MenuTabs {
-    fn default() -> MenuTabs {
-        MenuTabs::Status
-    }
 }
 
 /// initialize the terminal

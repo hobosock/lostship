@@ -1,16 +1,11 @@
 use core::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum PilotStatus {
+    #[default]
     Normal,
     Injured,
     KIA,
-}
-
-impl Default for PilotStatus {
-    fn default() -> Self {
-        PilotStatus::Normal
-    }
 }
 
 impl fmt::Display for PilotStatus {
@@ -24,8 +19,9 @@ impl fmt::Display for PilotStatus {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Rank {
+    #[default]
     Rookie,
     Veteran,
     Ace,
@@ -39,12 +35,6 @@ impl fmt::Display for Rank {
             Rank::Ace => "Ace",
         };
         write!(f, "{}", printable)
-    }
-}
-
-impl Default for Rank {
-    fn default() -> Self {
-        Rank::Rookie
     }
 }
 

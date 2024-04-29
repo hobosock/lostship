@@ -1,26 +1,26 @@
+pub mod game_functions;
 pub mod pilot;
 pub mod ship;
+pub mod threat;
 
 use rand::Rng;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub enum ScanResult {
+    Barren,
+    Fuel,
+    Anomoly,
+    Home,
+}
+
+#[derive(Debug, Default)]
 pub struct Leap {
     combat_rounds: u64,
     parts_found: u64,
     fuel_found: u64,
 }
 
-impl Default for Leap {
-    fn default() -> Self {
-        Leap {
-            combat_rounds: 0,
-            parts_found: 0,
-            fuel_found: 0,
-        }
-    }
-}
-
-pub fn roll(side: u64) -> u64 {
+pub fn roll(side: i64) -> i64 {
     if side == 1 {
         1
     } else {

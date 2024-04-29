@@ -3,18 +3,13 @@ use core::fmt;
 use super::pilot::Pilot;
 
 /// SubSystem status (100/66/33/0%)
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum Status {
+    #[default]
     Normal,
     Serviceable,
     BarelyFunctioning,
     Inoperable,
-}
-
-impl Default for Status {
-    fn default() -> Self {
-        Status::Normal
-    }
 }
 
 impl fmt::Display for Status {
@@ -30,18 +25,13 @@ impl fmt::Display for Status {
 }
 
 /// Scout damage
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum ShipDamage {
+    #[default]
     Normal,
     Half,
     Inoperable,
     Destroyed,
-}
-
-impl Default for ShipDamage {
-    fn default() -> Self {
-        ShipDamage::Normal
-    }
 }
 
 impl fmt::Display for ShipDamage {
@@ -57,19 +47,10 @@ impl fmt::Display for ShipDamage {
 }
 
 /// represents each subsystem, tracks status and upgrade
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SubSystem {
     pub status: Status,
     pub upgrade: bool,
-}
-
-impl Default for SubSystem {
-    fn default() -> Self {
-        SubSystem {
-            status: Status::default(),
-            upgrade: false,
-        }
-    }
 }
 
 /// represents each scout ship, tracks damage and name
@@ -89,19 +70,9 @@ impl Default for Ship {
 }
 
 /// Scout struct with Pilot, Ship, and Position
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Scout {
     pub position: u64,
     pub ship: Ship,
     pub pilot: Pilot,
-}
-
-impl Default for Scout {
-    fn default() -> Self {
-        Scout {
-            position: 0,
-            ship: Ship::default(),
-            pilot: Pilot::default(),
-        }
-    }
 }
