@@ -27,6 +27,7 @@ pub enum MenuTabs {
     Log,
     Hangar,
     Crew,
+    Combat,
     About,
     Help,
 }
@@ -62,8 +63,9 @@ pub fn ui(frame: &mut Frame, app: &App) {
         "2. Log",
         "3. Hangar",
         "4. Crew",
-        "5. About",
-        "6. Help",
+        "5. Combat",
+        "6. About",
+        "7. Help",
     ])
     .block(Block::default().title("Menu").borders(Borders::ALL))
     .style(Style::default().white())
@@ -138,6 +140,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
         MenuTabs::Crew => {
             draw_main_crew_tab(app, frame, chunks[1], main_block);
         }
+        MenuTabs::Combat => {}
         MenuTabs::About => {
             draw_main_about_tab(frame, chunks[1], main_block);
         }
@@ -146,7 +149,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
             instructions_text = Text::from(vec![Line::from(vec![
                 "<Q>".yellow().bold(),
                 " Quit ".into(),
-                "<1-6>".yellow().bold(),
+                "<1-7>".yellow().bold(),
                 " Change Tab".into(),
             ])]);
         }
@@ -276,4 +279,21 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
         .wrap(Wrap { trim: false })
         .block(main_block);
     frame.render_widget(paragraph, chunk);
+}
+
+/// renders the main block for Combat tab - different depending on in combat or not
+fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    if app.in_combat {
+        let sub_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(3)])
+            .split(chunk);
+        let ship_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(sub_chunks[1]);
+    } else {
+        let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
+        frame.render_widget(paragraph, chunk);
+    }
 }

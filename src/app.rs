@@ -30,6 +30,7 @@ pub struct App {
     pub scouts: [Scout; 6],
     pub log: Vec<Leap>,
     pub pilots: [Pilot; 6],
+    pub in_combat: bool,
 }
 
 impl Default for App {
@@ -66,6 +67,7 @@ impl Default for App {
                 Pilot::default(),
                 Pilot::default(),
             ],
+            in_combat: false,
         }
     }
 }
@@ -104,8 +106,9 @@ impl App {
             KeyCode::Char('2') => self.active_tab = MenuTabs::Log,
             KeyCode::Char('3') => self.active_tab = MenuTabs::Hangar,
             KeyCode::Char('4') => self.active_tab = MenuTabs::Crew,
-            KeyCode::Char('5') => self.active_tab = MenuTabs::About,
-            KeyCode::Char('6') => self.active_tab = MenuTabs::Help,
+            KeyCode::Char('5') => self.active_tab = MenuTabs::Combat,
+            KeyCode::Char('6') => self.active_tab = MenuTabs::About,
+            KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
             _ => {}
         }
     }
