@@ -1,7 +1,9 @@
 use crate::{
     gamerules::{
+        combat::Combat,
+        game_functions::leap_into_system,
         pilot::Pilot,
-        ship::{Scout, SubSystem},
+        ship::{Scout, Status, SubSystem},
         Leap,
     },
     tui::*,
@@ -31,6 +33,8 @@ pub struct App {
     pub log: Vec<Leap>,
     pub pilots: [Pilot; 6],
     pub in_combat: bool,
+    pub combat: Option<Combat>,
+    pub game_text: String,
 }
 
 impl Default for App {
@@ -68,6 +72,8 @@ impl Default for App {
                 Pilot::default(),
             ],
             in_combat: false,
+            combat: None,
+            game_text: "".to_string(),
         }
     }
 }
@@ -109,6 +115,11 @@ impl App {
             KeyCode::Char('5') => self.active_tab = MenuTabs::Combat,
             KeyCode::Char('6') => self.active_tab = MenuTabs::About,
             KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
+            KeyCode::Char('n') => {
+                if self.active_tab == MenuTabs::Status {
+                    leap_into_system(self);
+                }
+            }
             _ => {}
         }
     }

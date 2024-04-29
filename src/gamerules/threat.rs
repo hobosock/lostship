@@ -1,9 +1,23 @@
+use core::fmt;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Threats {
     None,
     Mk1,
     Mk2,
     Mk3,
+}
+
+impl fmt::Display for Threats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            Threats::None => "None",
+            Threats::Mk1 => "MK1",
+            Threats::Mk2 => "MK2",
+            Threats::Mk3 => "MK3",
+        };
+        write!(f, "{}", printable)
+    }
 }
 
 /// enemy fighter stats

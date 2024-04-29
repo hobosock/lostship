@@ -10,8 +10,10 @@ use std::io::{self, stdout, Stdout};
 use crate::{
     app::App,
     gamerules::{
+        combat,
         pilot::{PilotStatus, Rank},
         ship::ShipDamage,
+        threat::{Fighter, Threats},
     },
     resources::{about::ABOUT_STR, help::HELP_STR},
 };
@@ -20,7 +22,7 @@ use crate::{
 pub type Tui = Terminal<CrosstermBackend<Stdout>>;
 
 /// tabs for main TUI interface
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub enum MenuTabs {
     #[default]
     Status,
@@ -140,7 +142,9 @@ pub fn ui(frame: &mut Frame, app: &App) {
         MenuTabs::Crew => {
             draw_main_crew_tab(app, frame, chunks[1], main_block);
         }
-        MenuTabs::Combat => {}
+        MenuTabs::Combat => {
+            draw_main_combat_tab(app, frame, chunks[1], main_block);
+        }
         MenuTabs::About => {
             draw_main_about_tab(frame, chunks[1], main_block);
         }
@@ -283,7 +287,8 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
 
 /// renders the main block for Combat tab - different depending on in combat or not
 fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
-    if app.in_combat {
+    if app.in_combat && app.combat.is_some() {
+        let combat = app.combat.clone().unwrap();
         let sub_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Length(3), Constraint::Min(3)])
@@ -292,6 +297,84 @@ fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(sub_chunks[1]);
+
+        let colony_ship_text = if combat.rounds > 1 {
+            "Colony ship in range!"
+        } else {
+            "Colony ship not yet in range."
+        };
+        let paragraph = Paragraph::new(format!(
+            "Round: {} | {} | out of fuel after X rounds: Mk1 - 3, Mk2 - 4, Mk3 - 5",
+            combat.rounds, colony_ship_text
+        ));
+        frame.render_widget(paragraph, sub_chunks[0]);
+
+        let mut rows: Vec<Row> = Vec::new();
+        for scout in combat.scout_formation {
+            let damage_text = match scout.ship.damage {
+                ShipDamage::Normal => scout.ship.damage.to_string().green(),
+                ShipDamage::Half => scout.ship.damage.to_string().yellow(),
+                ShipDamage::Inoperable => scout.ship.damage.to_string().red(),
+                ShipDamage::Destroyed => scout.ship.damage.to_string().red().underlined(),
+            };
+            let pilot_text = match scout.pilot.rank {
+                Rank::Rookie => scout.pilot.name.clone().white(),
+                Rank::Veteran => format!("|V| {}", scout.pilot.name).blue(),
+                Rank::Ace => format!("|A| {}", scout.pilot.name).green(),
+            };
+            rows.push(Row::new(vec![
+                Cell::from(scout.position.to_string()),
+                Cell::from(scout.ship.name.clone()),
+                Cell::from(pilot_text),
+                Cell::from(damage_text),
+            ]))
+        }
+        let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
+            .style(Style::default().cyan().bold())
+            .bottom_margin(1);
+        let widths = [
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+        ];
+        let scout_table = Table::new(rows, widths)
+            .column_spacing(1)
+            .header(header_row)
+            .highlight_style(Style::default().reversed())
+            .highlight_symbol(">>");
+        frame.render_widget(scout_table, ship_chunks[0]);
+
+        let mut rows: Vec<Row> = Vec::new();
+        for enemy in combat.enemy_formation {
+            let fighter = match enemy {
+                Threats::None => continue,
+                Threats::Mk1 => Fighter::mk1(),
+                Threats::Mk2 => Fighter::mk2(),
+                Threats::Mk3 => Fighter::mk3(),
+            };
+            rows.push(Row::new(vec![
+                Cell::from(fighter.model.to_string()),
+                Cell::from(fighter.guns.to_string()),
+                Cell::from(fighter.fuel.to_string()),
+                Cell::from(fighter.hp.to_string()),
+            ]))
+        }
+        let header_row = Row::new(vec!["Type", "Guns", "Fuel", "HP"])
+            .style(Style::default().cyan().bold())
+            .bottom_margin(1);
+        let widths = [
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+            Constraint::Percentage(25),
+        ];
+        let enemy_table = Table::new(rows, widths)
+            .column_spacing(1)
+            .header(header_row)
+            .highlight_style(Style::default().reversed())
+            .highlight_symbol(">>");
+        frame.render_widget(enemy_table, ship_chunks[1]);
     } else {
         let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
         frame.render_widget(paragraph, chunk);
