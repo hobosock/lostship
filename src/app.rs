@@ -1,7 +1,7 @@
 use crate::{
     gamerules::{
         combat::Combat,
-        game_functions::leap_into_system,
+        game_functions::{leap_into_system, JumpStep},
         pilot::Pilot,
         ship::{Scout, Status, SubSystem},
         Leap,
@@ -35,6 +35,7 @@ pub struct App {
     pub in_combat: bool,
     pub combat: Option<Combat>,
     pub game_text: String,
+    pub jump_step: JumpStep,
 }
 
 impl Default for App {
@@ -74,6 +75,7 @@ impl Default for App {
             in_combat: false,
             combat: None,
             game_text: "".to_string(),
+            jump_step: JumpStep::Step1,
         }
     }
 }

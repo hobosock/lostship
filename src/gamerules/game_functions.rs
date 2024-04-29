@@ -12,10 +12,26 @@ use crate::app::App;
 
 use super::{roll, threat::Threats, ScanResult};
 
+/// enum for tracking which step of the jump the player is in
+#[derive(Debug)]
+pub enum JumpStep {
+    Step1,
+    Step2,
+    Step3,
+    Step4,
+    Step5,
+    Step6,
+    Step7,
+}
+
 /// Step 1. leap into system
 pub fn leap_into_system(app: &mut App) {
     app.leaps_since_incident += 1;
-    app.fuel -= 1;
+    if app.fuel > 0 {
+        app.fuel -= 1;
+    } else {
+        app.game_text += "Out of fuel!  Game Over";
+    }
 }
 
 /// Step 2. assess threat

@@ -131,6 +131,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
                     "Sensors: ".into(),
                     format!("{}", app.sensors.status).into(),
                 ]),
+                Line::from(vec![app.game_text.as_str().into()]),
             ]);
             let main_thing = Paragraph::new(main_text).block(main_block);
             frame.render_widget(main_thing, chunks[1]);
