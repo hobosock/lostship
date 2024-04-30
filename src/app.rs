@@ -10,7 +10,7 @@ use crate::{
     tui::*,
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::prelude::*;
+use ratatui::{prelude::*, widgets::TableState};
 use std::io;
 
 // define the app
@@ -37,6 +37,7 @@ pub struct App {
     pub combat: Option<Combat>,
     pub game_text: String,
     pub jump_step: JumpStep,
+    pub hanger_state: TableState,
 }
 
 impl Default for App {
@@ -77,6 +78,7 @@ impl Default for App {
             combat: None,
             game_text: "".to_string(),
             jump_step: JumpStep::Step1,
+            hanger_state: TableState::default(),
         }
     }
 }
@@ -92,7 +94,7 @@ impl App {
     }
 
     /// render the frame
-    fn render_frame(&self, frame: &mut Frame) {
+    fn render_frame(&mut self, frame: &mut Frame) {
         ui(frame, self);
     }
 
@@ -119,6 +121,8 @@ impl App {
             KeyCode::Char('6') => self.active_tab = MenuTabs::About,
             KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
             KeyCode::Char('n') => n_key_press(self),
+            KeyCode::Up => up_press(self),
+            KeyCode::Down => down_press(self),
             _ => {}
         }
     }
@@ -126,6 +130,28 @@ impl App {
     /// app methods
     fn exit(&mut self) {
         self.exit = true;
+    }
+}
+
+/// logic for up arrow key presses
+/// adjusts table selection up with wrapping on Hangar/Crew/Combat tabs
+fn up_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Hangar => app
+            .hanger_state
+            .select(select_up(app.hanger_state.selected(), app.scouts.len())),
+        _ => {}
+    }
+}
+
+/// logic for down arrow key presses
+/// adjusts table selection down with wrapping on Hangar/Crew/Combat tabs
+fn down_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Hangar => app
+            .hanger_state
+            .select(select_down(app.hanger_state.selected(), app.scouts.len())),
+        _ => {}
     }
 }
 

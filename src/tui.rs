@@ -5,7 +5,10 @@ use ratatui::{
     symbols::border,
     widgets::{block::*, *},
 };
-use std::io::{self, stdout, Stdout};
+use std::{
+    io::{self, stdout, Stdout},
+    thread::current,
+};
 
 use crate::{
     app::App,
@@ -49,7 +52,7 @@ pub fn restore() -> io::Result<()> {
 }
 
 /// main UI definition
-pub fn ui(frame: &mut Frame, app: &App) {
+pub fn ui(frame: &mut Frame, app: &mut App) {
     // split area up into 3 chunks (tabs/main/keys)
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -169,11 +172,11 @@ pub fn ui(frame: &mut Frame, app: &App) {
     frame.render_widget(instructions, chunks[2]);
 }
 
-fn draw_main_log_tab(app: &App) {
+fn draw_main_log_tab(app: &mut App) {
     // table with a row for each leap?
 }
 
-fn draw_main_hangar_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
@@ -217,7 +220,7 @@ fn draw_main_hangar_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
         .block(main_block)
         .highlight_style(Style::default().reversed())
         .highlight_symbol(">>");
-    frame.render_widget(table, chunk);
+    frame.render_stateful_widget(table, chunk, &mut app.hanger_state);
 }
 
 /// renders the main block for the Crew tab
@@ -379,5 +382,36 @@ fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
     } else {
         let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
         frame.render_widget(paragraph, chunk);
+    }
+}
+
+/// convenience function for incrementing table selection (down arrow)
+pub fn select_down(current: Option<usize>, length: usize) -> Option<usize> {
+    if length < 1 {
+        None
+    } else if current.is_none() {
+        Some(0)
+    } else {
+        let limit = length - 1;
+        if current.unwrap() == limit {
+            Some(0)
+        } else {
+            Some(current.unwrap() + 1)
+        }
+    }
+}
+/// convenience function for decrementing table selection (up arrow)
+pub fn select_up(current: Option<usize>, length: usize) -> Option<usize> {
+    if length < 1 {
+        None
+    } else if current.is_none() {
+        Some(length - 1)
+    } else {
+        let limit = length - 1;
+        if current.unwrap() == 0 {
+            Some(limit)
+        } else {
+            Some(current.unwrap() - 1)
+        }
     }
 }
