@@ -4,6 +4,7 @@ use crate::{
         game_functions::{assess_threat, leap_into_system, JumpStep},
         pilot::Pilot,
         ship::{Scout, Status, SubSystem},
+        threat::Threats,
         Leap,
     },
     tui::*,
@@ -136,18 +137,32 @@ fn n_key_press(app: &mut App) {
             JumpStep::Step1 => {
                 app.game_text += "Jumping into a new system ...";
                 leap_into_system(app);
+                app.jump_step = JumpStep::Step2;
             }
             JumpStep::Step2 => {
-                let enemy_vec = assess_threat(app);
                 app.game_text = "Assessing threats ...".to_string();
-                let combat = Combat {
+                let scout_vec = Vec::from(app.scouts.clone());
+                let enemy_vec = match assess_threat(app) {
+                    Some(ev) => {
+                        app.game_text += "Enemy ships are preparing to engage!";
+                        app.in_combat = true;
+                        ev
+                    }
+                    None => {
+                        app.game_text += "Sector clear.  Whew!";
+                        app.in_combat = false;
+                        vec![Threats::None]
+                    }
+                };
+                app.combat = Some(Combat {
                     rounds: 1,
-                    scout_formation: vec![Scout::default()], // TODO: get from app state
+                    scout_turns: vec![true; scout_vec.len()],
+                    scout_formation: scout_vec,
                     enemy_turns: vec![true; enemy_vec.len()],
                     enemy_formation: enemy_vec,
-                    scout_turns: vec![true; 1],
                     scout_half: true,
-                };
+                });
+                app.jump_step = JumpStep::Step3;
             }
             JumpStep::Step3 => {}
             JumpStep::Step4 => {}

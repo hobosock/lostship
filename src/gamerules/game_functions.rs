@@ -8,6 +8,8 @@
  * 7. leap again
  */
 
+use std::ops::RangeBounds;
+
 use crate::app::App;
 
 use super::{roll, threat::Threats, ScanResult};
@@ -35,7 +37,7 @@ pub fn leap_into_system(app: &mut App) {
 }
 
 /// Step 2. assess threat
-pub fn assess_threat(app: &App) -> Vec<Threats> {
+pub fn assess_threat(app: &App) -> Option<Vec<Threats>> {
     let roll_mod: i64 = if app.leaps_since_incident == 1 {
         -3
     } else if app.leaps_since_incident == 2 {
@@ -51,38 +53,38 @@ pub fn assess_threat(app: &App) -> Vec<Threats> {
     let threat_result = roll(6) + roll(6) + roll_mod;
 
     if threat_result <= 3 {
-        vec![Threats::None]
+        None
     } else if threat_result == 4 {
-        vec![Threats::Mk1; 4]
+        Some(vec![Threats::Mk1; 4])
     } else if threat_result == 5 {
-        vec![Threats::Mk1; 5]
+        Some(vec![Threats::Mk1; 5])
     } else if threat_result == 6 {
-        vec![Threats::Mk1; 6]
+        Some(vec![Threats::Mk1; 6])
     } else if threat_result == 7 {
-        vec![Threats::Mk2]
+        Some(vec![Threats::Mk2])
     } else if threat_result == 8 {
-        vec![Threats::Mk2, Threats::Mk1, Threats::Mk1]
+        Some(vec![Threats::Mk2, Threats::Mk1, Threats::Mk1])
     } else if threat_result == 9 {
         let mut threat = vec![Threats::Mk2];
         threat.append(&mut vec![Threats::Mk1; 3]);
-        threat
+        Some(threat)
     } else if threat_result == 10 {
-        vec![Threats::Mk2; 2]
+        Some(vec![Threats::Mk2; 2])
     } else if threat_result == 11 {
-        vec![Threats::Mk2, Threats::Mk2, Threats::Mk1]
+        Some(vec![Threats::Mk2, Threats::Mk2, Threats::Mk1])
     } else if threat_result == 12 {
-        vec![Threats::Mk3]
+        Some(vec![Threats::Mk3])
     } else if threat_result == 13 {
         let mut threat = vec![Threats::Mk3];
         threat.append(&mut vec![Threats::Mk1; 3]);
-        threat
+        Some(threat)
     } else if threat_result == 14 {
-        vec![Threats::Mk3, Threats::Mk2]
+        Some(vec![Threats::Mk3, Threats::Mk2])
     } else {
         let mut threat = vec![Threats::Mk3; 2];
         threat.append(&mut vec![Threats::Mk2; 2]);
         threat.append(&mut vec![Threats::Mk1; 2]);
-        threat
+        Some(threat)
     }
 }
 
@@ -117,7 +119,7 @@ pub fn system_scan(leaps: u64) -> (u64, ScanResult) {
         -2
     } else if leaps == 3 {
         -1
-    } else if leaps >= 4 && leaps <= 7 {
+    } else if (4..=7).contains(&leaps) {
         0
     } else {
         1

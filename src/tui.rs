@@ -242,7 +242,7 @@ fn draw_main_crew_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Blo
         let injured_text = match pilot.status {
             PilotStatus::Normal => pilot.status.to_string().green(),
             PilotStatus::Injured => pilot.status.to_string().yellow(),
-            PilotStatus::KIA => pilot.status.to_string().red(),
+            PilotStatus::Kia => pilot.status.to_string().red(),
         };
         // TODO: color leaps injured row?
         let row = Row::new(vec![

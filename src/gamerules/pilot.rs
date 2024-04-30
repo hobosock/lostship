@@ -5,7 +5,7 @@ pub enum PilotStatus {
     #[default]
     Normal,
     Injured,
-    KIA,
+    Kia,
 }
 
 impl fmt::Display for PilotStatus {
@@ -13,7 +13,7 @@ impl fmt::Display for PilotStatus {
         let printable = match *self {
             PilotStatus::Normal => "Normal",
             PilotStatus::Injured => "Injured",
-            PilotStatus::KIA => "KIA",
+            PilotStatus::Kia => "KIA",
         };
         write!(f, "{}", printable)
     }
