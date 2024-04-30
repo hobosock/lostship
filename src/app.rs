@@ -1,7 +1,7 @@
 use crate::{
     gamerules::{
         combat::Combat,
-        game_functions::{leap_into_system, JumpStep},
+        game_functions::{assess_threat, leap_into_system, JumpStep},
         pilot::Pilot,
         ship::{Scout, Status, SubSystem},
         Leap,
@@ -117,11 +117,7 @@ impl App {
             KeyCode::Char('5') => self.active_tab = MenuTabs::Combat,
             KeyCode::Char('6') => self.active_tab = MenuTabs::About,
             KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
-            KeyCode::Char('n') => {
-                if self.active_tab == MenuTabs::Status {
-                    leap_into_system(self);
-                }
-            }
+            KeyCode::Char('n') => n_key_press(self),
             _ => {}
         }
     }
@@ -129,5 +125,35 @@ impl App {
     /// app methods
     fn exit(&mut self) {
         self.exit = true;
+    }
+}
+
+/// logic for n key presses
+/// only active on Status tab, advances one step at a time and waits for combat to resolve
+fn n_key_press(app: &mut App) {
+    if app.active_tab == MenuTabs::Status {
+        match app.jump_step {
+            JumpStep::Step1 => {
+                app.game_text += "Jumping into a new system ...";
+                leap_into_system(app);
+            }
+            JumpStep::Step2 => {
+                let enemy_vec = assess_threat(app);
+                app.game_text = "Assessing threats ...".to_string();
+                let combat = Combat {
+                    rounds: 1,
+                    scout_formation: vec![Scout::default()], // TODO: get from app state
+                    enemy_turns: vec![true; enemy_vec.len()],
+                    enemy_formation: enemy_vec,
+                    scout_turns: vec![true; 1],
+                    scout_half: true,
+                };
+            }
+            JumpStep::Step3 => {}
+            JumpStep::Step4 => {}
+            JumpStep::Step5 => {}
+            JumpStep::Step6 => {}
+            JumpStep::Step7 => {}
+        }
     }
 }
