@@ -142,9 +142,25 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         MenuTabs::Log => {}
         MenuTabs::Hangar => {
             draw_main_hangar_tab(app, frame, chunks[1], main_block);
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<Up>/<Down>".yellow().bold(),
+                " Change selection. ".into(),
+                "<E>".yellow().bold(),
+                " Edit ".into(),
+            ])]);
         }
         MenuTabs::Crew => {
             draw_main_crew_tab(app, frame, chunks[1], main_block);
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<Up>/<Down>".yellow().bold(),
+                " Change selection. ".into(),
+                "<E>".yellow().bold(),
+                " Edit ".into(),
+            ])]);
         }
         MenuTabs::Combat => {
             draw_main_combat_tab(app, frame, chunks[1], main_block);
@@ -224,7 +240,7 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 }
 
 /// renders the main block for the Crew tab
-fn draw_main_crew_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     let header_row = Row::new(vec!["Name", "Kills", "Rank", "Status", "Leaps Injured"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
@@ -270,7 +286,7 @@ fn draw_main_crew_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Blo
         .block(main_block)
         .highlight_style(Style::default().reversed())
         .highlight_symbol(">>");
-    frame.render_widget(table, chunk);
+    frame.render_stateful_widget(table, chunk, &mut app.crew_state);
 }
 
 /// renders main block for About tab

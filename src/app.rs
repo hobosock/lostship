@@ -38,6 +38,7 @@ pub struct App {
     pub game_text: String,
     pub jump_step: JumpStep,
     pub hanger_state: TableState,
+    pub crew_state: TableState,
 }
 
 impl Default for App {
@@ -79,6 +80,7 @@ impl Default for App {
             game_text: "".to_string(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
+            crew_state: TableState::default(),
         }
     }
 }
@@ -140,6 +142,9 @@ fn up_press(app: &mut App) {
         MenuTabs::Hangar => app
             .hanger_state
             .select(select_up(app.hanger_state.selected(), app.scouts.len())),
+        MenuTabs::Crew => app
+            .crew_state
+            .select(select_up(app.crew_state.selected(), app.pilots.len())),
         _ => {}
     }
 }
@@ -151,6 +156,9 @@ fn down_press(app: &mut App) {
         MenuTabs::Hangar => app
             .hanger_state
             .select(select_down(app.hanger_state.selected(), app.scouts.len())),
+        MenuTabs::Crew => app
+            .crew_state
+            .select(select_down(app.crew_state.selected(), app.pilots.len())),
         _ => {}
     }
 }
