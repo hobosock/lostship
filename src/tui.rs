@@ -1,14 +1,12 @@
 use crossterm::{execute, terminal::*};
 use ratatui::{
+    layout::Layout,
     prelude::*,
     style::Stylize,
     symbols::border,
     widgets::{block::*, *},
 };
-use std::{
-    io::{self, stdout, Stdout},
-    thread::current,
-};
+use std::io::{self, stdout, Stdout};
 
 use crate::{
     app::App,
@@ -186,6 +184,17 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     // render
     frame.render_widget(tabs, chunks[0]);
     frame.render_widget(instructions, chunks[2]);
+
+    // draw editing popup
+    if app.editing {
+        let popup_block = Block::default()
+            .title("Enter Name")
+            .borders(Borders::ALL)
+            .style(Style::default().bg(Color::DarkGray));
+        let popup_area = centered_rect(frame.size(), 30, 10);
+        let edit_paragraph = Paragraph::new(app.edit_string.clone()).block(popup_block);
+        frame.render_widget(edit_paragraph, popup_area);
+    }
 }
 
 fn draw_main_log_tab(app: &mut App) {
@@ -430,4 +439,25 @@ pub fn select_up(current: Option<usize>, length: usize) -> Option<usize> {
             Some(current.unwrap() - 1)
         }
     }
+}
+
+/// centers a Rect in current area
+fn centered_rect(r: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

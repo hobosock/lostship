@@ -39,6 +39,9 @@ pub struct App {
     pub jump_step: JumpStep,
     pub hanger_state: TableState,
     pub crew_state: TableState,
+    pub editing: bool,
+    pub edit_string: String,
+    pub edit_target: Option<usize>,
 }
 
 impl Default for App {
@@ -81,6 +84,9 @@ impl Default for App {
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
             crew_state: TableState::default(),
+            editing: false,
+            edit_string: String::new(),
+            edit_target: None,
         }
     }
 }
@@ -113,25 +119,71 @@ impl App {
 
     /// handle key events
     fn handle_key_event(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Char('1') => self.active_tab = MenuTabs::Status,
-            KeyCode::Char('2') => self.active_tab = MenuTabs::Log,
-            KeyCode::Char('3') => self.active_tab = MenuTabs::Hangar,
-            KeyCode::Char('4') => self.active_tab = MenuTabs::Crew,
-            KeyCode::Char('5') => self.active_tab = MenuTabs::Combat,
-            KeyCode::Char('6') => self.active_tab = MenuTabs::About,
-            KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
-            KeyCode::Char('n') => n_key_press(self),
-            KeyCode::Up => up_press(self),
-            KeyCode::Down => down_press(self),
-            _ => {}
+        if self.editing {
+            match key_event.code {
+                KeyCode::Esc => {
+                    self.editing = false;
+                    self.edit_string = String::new();
+                }
+                KeyCode::Enter => {
+                    // TODO: write string to target - &mut String?
+                    match self.active_tab {
+                        MenuTabs::Hangar => {
+                            if self.edit_target.is_some() {
+                                self.scouts[self.edit_target.unwrap()].ship.name =
+                                    self.edit_string.clone();
+                            }
+                        }
+                        _ => {}
+                    }
+                    self.editing = false;
+                }
+                KeyCode::Backspace => {
+                    self.edit_string.pop();
+                }
+                KeyCode::Char(value) => {
+                    self.edit_string.push(value);
+                }
+                _ => {}
+            }
+        } else {
+            match key_event.code {
+                KeyCode::Char('q') => self.exit(),
+                KeyCode::Char('1') => self.active_tab = MenuTabs::Status,
+                KeyCode::Char('2') => self.active_tab = MenuTabs::Log,
+                KeyCode::Char('3') => self.active_tab = MenuTabs::Hangar,
+                KeyCode::Char('4') => self.active_tab = MenuTabs::Crew,
+                KeyCode::Char('5') => self.active_tab = MenuTabs::Combat,
+                KeyCode::Char('6') => self.active_tab = MenuTabs::About,
+                KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
+                KeyCode::Char('n') => n_key_press(self),
+                KeyCode::Char('e') => edit_press(self),
+                KeyCode::Up => up_press(self),
+                KeyCode::Down => down_press(self),
+                _ => {}
+            }
         }
     }
 
     /// app methods
     fn exit(&mut self) {
         self.exit = true;
+    }
+}
+
+/// handles 'e' edit key
+/// gets a reference to the name field of whatever selected table element
+/// enables edit mode and clears previous string just in case
+fn edit_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Hangar => {
+            if app.hanger_state.selected().is_some() {
+                app.editing = true;
+                app.edit_string = String::new();
+                app.edit_target = Some(app.hanger_state.selected().unwrap());
+            }
+        }
+        _ => {}
     }
 }
 
