@@ -125,19 +125,7 @@ impl App {
                     self.editing = false;
                     self.edit_string = String::new();
                 }
-                KeyCode::Enter => {
-                    // TODO: write string to target - &mut String?
-                    match self.active_tab {
-                        MenuTabs::Hangar => {
-                            if self.edit_target.is_some() {
-                                self.scouts[self.edit_target.unwrap()].ship.name =
-                                    self.edit_string.clone();
-                            }
-                        }
-                        _ => {}
-                    }
-                    self.editing = false;
-                }
+                KeyCode::Enter => enter_press(self),
                 KeyCode::Backspace => {
                     self.edit_string.pop();
                 }
@@ -183,8 +171,32 @@ fn edit_press(app: &mut App) {
                 app.edit_target = Some(app.hanger_state.selected().unwrap());
             }
         }
+        MenuTabs::Crew => {
+            if app.crew_state.selected().is_some() {
+                app.editing = true;
+                app.edit_string = String::new();
+                app.edit_target = Some(app.crew_state.selected().unwrap());
+            }
+        }
         _ => {}
     }
+}
+
+fn enter_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Hangar => {
+            if app.edit_target.is_some() {
+                app.scouts[app.edit_target.unwrap()].ship.name = app.edit_string.clone();
+            }
+        }
+        MenuTabs::Crew => {
+            if app.edit_target.is_some() {
+                app.pilots[app.edit_target.unwrap()].name = app.edit_string.clone();
+            }
+        }
+        _ => {}
+    }
+    app.editing = false;
 }
 
 /// logic for up arrow key presses
