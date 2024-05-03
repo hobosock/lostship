@@ -21,6 +21,7 @@ impl fmt::Display for Threats {
 }
 
 /// enemy fighter stats
+#[derive(Clone, Debug)]
 pub struct Fighter {
     pub model: Threats,
     pub hp: i64,
@@ -56,4 +57,19 @@ impl Fighter {
             fuel: 5,
         }
     }
+}
+
+/// turn vector of Threats enum to vector of Fighter Structs
+/// I know this is dumb, will fix later
+pub fn threats_to_fighters(v: &Vec<Threats>) -> Vec<Fighter> {
+    let mut fighters = Vec::new();
+    for threat in v.iter() {
+        match threat {
+            Threats::None => {}
+            Threats::Mk1 => fighters.push(Fighter::mk1()),
+            Threats::Mk2 => fighters.push(Fighter::mk2()),
+            Threats::Mk3 => fighters.push(Fighter::mk3()),
+        }
+    }
+    fighters
 }

@@ -1,4 +1,7 @@
-use super::{ship::Scout, threat::Threats};
+use super::{
+    ship::Scout,
+    threat::{Fighter, Threats},
+};
 
 /// tracks all the information for combat phase
 /// formation fields are predefined arrays because it is not possible to field more than 6 ships
@@ -9,6 +12,7 @@ pub struct Combat {
     pub rounds: u64,
     pub scout_formation: Vec<Scout>,
     pub enemy_formation: Vec<Threats>,
+    pub enemy_stats: Vec<Fighter>,
     pub scout_turns: Vec<bool>,
     pub enemy_turns: Vec<bool>,
     pub scout_half: bool,

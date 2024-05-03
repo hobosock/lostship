@@ -324,12 +324,32 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
 
 /// renders the main block for Combat tab - different depending on in combat or not
 fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
-    // reset pilot information in case order changed
-    for i in 0..app.scouts.len() {
-        app.scouts[i].pilot = app.pilots[i].clone();
-    }
     if app.in_combat && app.combat.is_some() {
-        let combat = app.combat.clone().unwrap();
+        let mut combat = app.combat.clone().unwrap();
+
+        // reset pilot information in case order changed
+        // TODO: maybe don't want to do this during a combat phase?
+        for i in 0..app.scouts.len() {
+            app.scouts[i].pilot = app.pilots[i].clone();
+        }
+
+        // check to see if all of scouts have taken a turn
+        if combat.scout_turns.iter().all(|x| *x == true) {
+            combat.scout_half = false; // now enemy turn
+            combat.scout_turns = vec![false; combat.scout_formation.len()]; // reset
+        }
+        if combat.enemy_turns.iter().all(|x| *x == true) {
+            combat.scout_half = true;
+            combat.enemy_turns = vec![false; combat.enemy_formation.len()];
+            // end of round, +/- fuel, round counter, etc.
+            combat.rounds += 1;
+            for (i, enemy) in app.combat.as_ref().unwrap().enemy_stats.iter().enumerate() {
+                if enemy.fuel > 0 {
+                    combat.enemy_stats[i].fuel -= 1;
+                }
+            }
+        }
+
         let sub_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Length(3), Constraint::Min(3)])

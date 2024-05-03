@@ -4,7 +4,7 @@ use crate::{
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::Pilot,
         ship::{Scout, SubSystem},
-        threat::Threats,
+        threat::{threats_to_fighters, Threats},
         Leap,
     },
     tui::*,
@@ -393,6 +393,7 @@ fn n_key_press(app: &mut App) {
                     scout_turns: vec![true; scout_vec.len()],
                     scout_formation: scout_vec,
                     enemy_turns: vec![true; enemy_vec.len()],
+                    enemy_stats: threats_to_fighters(&enemy_vec),
                     enemy_formation: enemy_vec,
                     scout_half: true,
                 });
@@ -404,6 +405,7 @@ fn n_key_press(app: &mut App) {
                     rounds: 0,
                     scout_formation: app.scouts.to_vec(),
                     enemy_formation: vec![Threats::Mk1, Threats::Mk2],
+                    enemy_stats: threats_to_fighters(&vec![Threats::Mk1, Threats::Mk2]),
                     scout_turns: vec![false; 6],
                     enemy_turns: vec![false, false],
                     scout_half: true,
@@ -413,10 +415,12 @@ fn n_key_press(app: &mut App) {
             JumpStep::Step4 => {
                 // TODO: error proof
                 app.parts += search_wreckage(app.combat.clone().unwrap().enemy_formation);
+                app.jump_step = JumpStep::Step5;
             }
             JumpStep::Step5 => {
                 let (fuel, scan_result) = system_scan(app.leaps_since_incident);
                 app.fuel += fuel;
+                app.jump_step = JumpStep::Step6;
             }
             JumpStep::Step6 => {}
             JumpStep::Step7 => {}
