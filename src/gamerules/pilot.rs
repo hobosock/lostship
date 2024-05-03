@@ -1,6 +1,6 @@
 use core::fmt;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum PilotStatus {
     #[default]
     Normal,
