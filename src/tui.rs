@@ -396,7 +396,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             .block(Block::default().borders(ship_border))
             .highlight_style(Style::default().reversed())
             .highlight_symbol(">>");
-        frame.render_widget(scout_table, ship_chunks[0]);
+        frame.render_stateful_widget(scout_table, ship_chunks[0], &mut app.combat_scout_state);
 
         let mut rows: Vec<Row> = Vec::new();
         for enemy in combat.enemy_formation {
@@ -428,7 +428,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             .block(Block::default().borders(enemy_border))
             .highlight_style(Style::default().reversed())
             .highlight_symbol(">>");
-        frame.render_widget(enemy_table, ship_chunks[1]);
+        frame.render_stateful_widget(enemy_table, ship_chunks[1], &mut app.combat_enemy_state);
     } else {
         let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
         frame.render_widget(paragraph, chunk);

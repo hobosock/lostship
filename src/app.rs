@@ -44,6 +44,8 @@ pub struct App {
     pub edit_string: String,
     pub edit_target: Option<usize>,
     pub combat_select: bool, // indicates active table in Combat tab
+    pub combat_scout_state: TableState,
+    pub combat_enemy_state: TableState,
 }
 
 impl Default for App {
@@ -91,6 +93,8 @@ impl Default for App {
             edit_string: String::new(),
             edit_target: None,
             combat_select: true,
+            combat_scout_state: TableState::default(),
+            combat_enemy_state: TableState::default(),
         }
     }
 }
@@ -217,6 +221,21 @@ fn up_press(app: &mut App) {
         MenuTabs::Crew => app
             .crew_state
             .select(select_up(app.crew_state.selected(), app.pilots.len())),
+        MenuTabs::Combat => {
+            if app.combat.is_some() {
+                if app.combat_select {
+                    app.combat_scout_state.select(select_up(
+                        app.combat_scout_state.selected(),
+                        app.scouts.len(),
+                    ));
+                } else {
+                    app.combat_enemy_state.select(select_up(
+                        app.combat_enemy_state.selected(),
+                        app.combat.as_ref().unwrap().enemy_formation.len(),
+                    ));
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -231,6 +250,21 @@ fn down_press(app: &mut App) {
         MenuTabs::Crew => app
             .crew_state
             .select(select_down(app.crew_state.selected(), app.pilots.len())),
+        MenuTabs::Combat => {
+            if app.combat.is_some() {
+                if app.combat_select {
+                    app.combat_scout_state.select(select_down(
+                        app.combat_scout_state.selected(),
+                        app.scouts.len(),
+                    ));
+                } else {
+                    app.combat_enemy_state.select(select_down(
+                        app.combat_enemy_state.selected(),
+                        app.combat.as_ref().unwrap().enemy_formation.len(),
+                    ));
+                }
+            }
+        }
         _ => {}
     }
 }
