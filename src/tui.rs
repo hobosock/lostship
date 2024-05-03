@@ -202,6 +202,10 @@ fn draw_main_log_tab(app: &mut App) {
 }
 
 fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // reset pilot information in case order changed
+    for i in 0..(app.scouts.len() - 1) {
+        app.scouts[i].pilot = app.pilots[i].clone();
+    }
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
