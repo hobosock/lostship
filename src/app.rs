@@ -148,6 +148,8 @@ impl App {
                 KeyCode::Char('7') => self.active_tab = MenuTabs::Help,
                 KeyCode::Char('n') => n_key_press(self),
                 KeyCode::Char('e') => edit_press(self),
+                KeyCode::Char('w') => w_key_press(self),
+                KeyCode::Char('s') => s_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
                 _ => {}
@@ -225,6 +227,68 @@ fn down_press(app: &mut App) {
         MenuTabs::Crew => app
             .crew_state
             .select(select_down(app.crew_state.selected(), app.pilots.len())),
+        _ => {}
+    }
+}
+
+/// shifts position of selected element up (swaps with n-1 element with wrapping)
+fn shift_up<T: Clone>(v: &mut [T], pos: usize) {
+    let max_pos = v.len() - 1;
+    let b = if pos == 0 {
+        v[max_pos].clone()
+    } else {
+        v[pos - 1].clone()
+    };
+    let a = v[pos].clone();
+    v[pos] = b;
+    if pos == 0 {
+        v[max_pos] = a;
+    } else {
+        v[pos - 1] = a;
+    }
+}
+
+/// shifts position of selected element down (swaps with n+1 element with wrapping)
+fn shift_down<T: Clone>(v: &mut [T], pos: usize) {
+    let max_pos = v.len() - 1;
+    let b = if pos == max_pos {
+        v[0].clone()
+    } else {
+        v[pos + 1].clone()
+    };
+    let a = v[pos].clone();
+    v[pos] = b;
+    if pos == max_pos {
+        v[0] = a;
+    } else {
+        v[pos + 1] = a;
+    }
+}
+
+/// logic for w key presses
+fn w_key_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Crew => {
+            if app.crew_state.selected().is_some() {
+                shift_up(&mut app.pilots, app.crew_state.selected().unwrap());
+                app.crew_state
+                    .select(select_up(app.crew_state.selected(), app.pilots.len()));
+            }
+        }
+        _ => {}
+    }
+}
+
+/// logic for s key presses
+fn s_key_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Crew => {
+            if app.crew_state.selected().is_some() {
+                shift_down(&mut app.pilots, app.crew_state.selected().unwrap());
+                app.crew_state
+                    .select(select_down(app.crew_state.selected(), app.pilots.len()));
+            }
+        }
         _ => {}
     }
 }

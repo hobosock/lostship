@@ -158,6 +158,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Change selection. ".into(),
                 "<E>".yellow().bold(),
                 " Edit ".into(),
+                "<W>/<S>".yellow().bold(),
+                " Shift Assignment ".into(),
             ])]);
         }
         MenuTabs::Combat => {
