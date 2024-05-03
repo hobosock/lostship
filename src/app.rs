@@ -1,7 +1,7 @@
 use crate::{
     gamerules::{
         combat::Combat,
-        game_functions::{assess_threat, leap_into_system, JumpStep},
+        game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::Pilot,
         ship::{Scout, SubSystem},
         threat::Threats,
@@ -364,9 +364,26 @@ fn n_key_press(app: &mut App) {
                 });
                 app.jump_step = JumpStep::Step3;
             }
-            JumpStep::Step3 => {}
-            JumpStep::Step4 => {}
-            JumpStep::Step5 => {}
+            JumpStep::Step3 => {
+                // TODO: just create a battle for combat testing for now
+                app.combat = Some(Combat {
+                    rounds: 0,
+                    scout_formation: app.scouts.to_vec(),
+                    enemy_formation: vec![Threats::Mk1, Threats::Mk2],
+                    scout_turns: vec![false; 6],
+                    enemy_turns: vec![false, false],
+                    scout_half: true,
+                });
+                app.in_combat = true;
+            }
+            JumpStep::Step4 => {
+                // TODO: error proof
+                app.parts += search_wreckage(app.combat.clone().unwrap().enemy_formation);
+            }
+            JumpStep::Step5 => {
+                let (fuel, scan_result) = system_scan(app.leaps_since_incident);
+                app.fuel += fuel;
+            }
             JumpStep::Step6 => {}
             JumpStep::Step7 => {}
         }
