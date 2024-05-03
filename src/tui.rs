@@ -147,6 +147,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Change selection. ".into(),
                 "<E>".yellow().bold(),
                 " Edit ".into(),
+                "<W>/<S>".yellow().bold(),
+                " Shift Assignment ".into(),
             ])]);
         }
         MenuTabs::Crew => {
@@ -205,7 +207,7 @@ fn draw_main_log_tab(app: &mut App) {
 
 fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     // reset pilot information in case order changed
-    for i in 0..(app.scouts.len() - 1) {
+    for i in 0..app.scouts.len() {
         app.scouts[i].pilot = app.pilots[i].clone();
     }
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])

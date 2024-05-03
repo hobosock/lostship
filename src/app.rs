@@ -275,6 +275,14 @@ fn w_key_press(app: &mut App) {
                     .select(select_up(app.crew_state.selected(), app.pilots.len()));
             }
         }
+        MenuTabs::Hangar => {
+            if app.hanger_state.selected().is_some() {
+                shift_up(&mut app.scouts, app.hanger_state.selected().unwrap());
+                shift_up(&mut app.pilots, app.hanger_state.selected().unwrap());
+                app.hanger_state
+                    .select(select_up(app.hanger_state.selected(), app.scouts.len()));
+            }
+        }
         _ => {}
     }
 }
@@ -287,6 +295,14 @@ fn s_key_press(app: &mut App) {
                 shift_down(&mut app.pilots, app.crew_state.selected().unwrap());
                 app.crew_state
                     .select(select_down(app.crew_state.selected(), app.pilots.len()));
+            }
+        }
+        MenuTabs::Hangar => {
+            if app.hanger_state.selected().is_some() {
+                shift_down(&mut app.scouts, app.hanger_state.selected().unwrap());
+                shift_down(&mut app.pilots, app.hanger_state.selected().unwrap());
+                app.hanger_state
+                    .select(select_down(app.hanger_state.selected(), app.scouts.len()));
             }
         }
         _ => {}
