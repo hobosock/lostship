@@ -3,7 +3,7 @@ use crate::{
         combat::Combat,
         game_functions::{assess_threat, leap_into_system, JumpStep},
         pilot::Pilot,
-        ship::{Scout, Status, SubSystem},
+        ship::{Scout, SubSystem},
         threat::Threats,
         Leap,
     },
@@ -43,6 +43,7 @@ pub struct App {
     pub editing: bool,
     pub edit_string: String,
     pub edit_target: Option<usize>,
+    pub combat_select: bool, // indicates active table in Combat tab
 }
 
 impl Default for App {
@@ -89,6 +90,7 @@ impl Default for App {
             editing: false,
             edit_string: String::new(),
             edit_target: None,
+            combat_select: true,
         }
     }
 }
@@ -152,6 +154,8 @@ impl App {
                 KeyCode::Char('s') => s_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
+                KeyCode::Left => left_press(self),
+                KeyCode::Right => right_press(self),
                 _ => {}
             }
         }
@@ -227,6 +231,22 @@ fn down_press(app: &mut App) {
         MenuTabs::Crew => app
             .crew_state
             .select(select_down(app.crew_state.selected(), app.pilots.len())),
+        _ => {}
+    }
+}
+
+/// logic for left arrow presses
+fn left_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Combat => app.combat_select = true,
+        _ => {}
+    }
+}
+
+/// logic for right arrow presses
+fn right_press(app: &mut App) {
+    match app.active_tab {
+        MenuTabs::Combat => app.combat_select = false,
         _ => {}
     }
 }

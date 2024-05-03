@@ -323,7 +323,11 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
 }
 
 /// renders the main block for Combat tab - different depending on in combat or not
-fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // reset pilot information in case order changed
+    for i in 0..app.scouts.len() {
+        app.scouts[i].pilot = app.pilots[i].clone();
+    }
     if app.in_combat && app.combat.is_some() {
         let combat = app.combat.clone().unwrap();
         let sub_chunks = Layout::default()
@@ -345,6 +349,17 @@ fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
             combat.rounds, colony_ship_text
         ));
         frame.render_widget(paragraph, sub_chunks[0]);
+
+        let ship_border = if app.combat_select {
+            Borders::ALL
+        } else {
+            Borders::NONE
+        };
+        let enemy_border = if app.combat_select {
+            Borders::NONE
+        } else {
+            Borders::ALL
+        };
 
         let mut rows: Vec<Row> = Vec::new();
         for scout in combat.scout_formation {
@@ -378,6 +393,7 @@ fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
         let scout_table = Table::new(rows, widths)
             .column_spacing(1)
             .header(header_row)
+            .block(Block::default().borders(ship_border))
             .highlight_style(Style::default().reversed())
             .highlight_symbol(">>");
         frame.render_widget(scout_table, ship_chunks[0]);
@@ -409,6 +425,7 @@ fn draw_main_combat_tab(app: &App, frame: &mut Frame, chunk: Rect, main_block: B
         let enemy_table = Table::new(rows, widths)
             .column_spacing(1)
             .header(header_row)
+            .block(Block::default().borders(enemy_border))
             .highlight_style(Style::default().reversed())
             .highlight_symbol(">>");
         frame.render_widget(enemy_table, ship_chunks[1]);
