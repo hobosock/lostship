@@ -113,12 +113,14 @@ pub fn scout_damage(scout: &mut Scout) -> String {
     if roll_result == 1 {
         "Superficial damage.".to_string()
     } else if roll_result == 2 {
+        // TODO: if pilot is already injured, they die
         scout.pilot.status = PilotStatus::Injured;
         "Pilot injured.".to_string()
     } else if roll_result == 3 {
         scout.pilot.status = PilotStatus::Kia;
         "Pilot KIA".to_string()
     } else if roll_result == 4 {
+        // TODO: if ship is already at 50% damage, it is destroyed
         scout.ship.damage = ShipDamage::Half;
         "Scout at 50% damage".to_string()
     } else if roll_result == 5 {
