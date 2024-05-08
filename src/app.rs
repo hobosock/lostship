@@ -2,8 +2,8 @@ use crate::{
     gamerules::{
         combat::Combat,
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
-        pilot::Pilot,
-        ship::{Scout, SubSystem},
+        pilot::{Pilot, PilotStatus},
+        ship::{Scout, ShipDamage, SubSystem},
         threat::{threats_to_fighters, Threats},
         Leap,
     },
@@ -156,6 +156,7 @@ impl App {
                 KeyCode::Char('e') => edit_press(self),
                 KeyCode::Char('w') => w_key_press(self),
                 KeyCode::Char('s') => s_key_press(self),
+                KeyCode::Char('a') => a_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
                 KeyCode::Left => left_press(self),
@@ -360,6 +361,42 @@ fn s_key_press(app: &mut App) {
             }
         }
         _ => {}
+    }
+}
+
+/// logic for a key presses
+/// if in combat AND scout turn AND selected valid scout AND enemy, roll for damage
+fn a_key_press(app: &mut App) {
+    if app.combat.is_some()
+        && app.combat.as_ref().unwrap().scout_half
+        && app.combat_scout_state.selected().is_some()
+        && app.combat_enemy_state.selected().is_some()
+    {
+        // make sure valid ships are selected (not destroyed, etc.)
+        let combat = app.combat.clone().unwrap();
+        let scout_pos = app.combat_scout_state.selected().unwrap();
+        let scout = app.scouts[scout_pos].clone();
+        let enemy_pos = app.combat_enemy_state.selected().unwrap();
+        let enemy = combat.enemy_stats[enemy_pos].clone();
+        let ship_ok = match scout.ship.damage {
+            ShipDamage::Normal => true,
+            ShipDamage::Half => true,
+            _ => false,
+        };
+        let pilot_ok = match scout.pilot.status {
+            PilotStatus::Normal => true,
+            PilotStatus::Injured => true,
+            _ => false,
+        };
+        let target_ok = if enemy.fuel > 0 && enemy.hp > 0 {
+            true
+        } else {
+            false
+        };
+
+        if ship_ok && pilot_ok && target_ok {
+            //TODO: scout attack
+        }
     }
 }
 
