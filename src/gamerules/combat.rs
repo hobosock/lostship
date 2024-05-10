@@ -167,3 +167,12 @@ pub fn mining_laser(upgraded: bool) -> u64 {
         0
     }
 }
+
+/// handles subtraction for enemy damage, protects for overflow
+pub fn enemy_damage(damage: u64, hp: u64) -> u64 {
+    if hp < damage {
+        0
+    } else {
+        hp - damage
+    }
+}

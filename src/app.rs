@@ -1,6 +1,6 @@
 use crate::{
     gamerules::{
-        combat::Combat,
+        combat::{enemy_damage, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{Pilot, PilotStatus},
         ship::{Scout, ShipDamage, SubSystem},
@@ -373,9 +373,10 @@ fn a_key_press(app: &mut App) {
         && app.combat_enemy_state.selected().is_some()
     {
         // make sure valid ships are selected (not destroyed, etc.)
-        let combat = app.combat.clone().unwrap();
+        let mut combat = app.combat.clone().unwrap();
         let scout_pos = app.combat_scout_state.selected().unwrap();
         let scout = app.scouts[scout_pos].clone();
+        let turn_ok = combat.scout_turns[scout_pos];
         let enemy_pos = app.combat_enemy_state.selected().unwrap();
         let enemy = combat.enemy_stats[enemy_pos].clone();
         let ship_ok = match scout.ship.damage {
@@ -394,8 +395,10 @@ fn a_key_press(app: &mut App) {
             false
         };
 
-        if ship_ok && pilot_ok && target_ok {
-            //TODO: scout attack
+        if ship_ok && pilot_ok && target_ok && !turn_ok {
+            let damage = scout_attack(&scout);
+            combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+            combat.scout_turns[scout_pos] = true;
         }
     }
 }

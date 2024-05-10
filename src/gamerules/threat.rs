@@ -24,7 +24,7 @@ impl fmt::Display for Threats {
 #[derive(Clone, Debug)]
 pub struct Fighter {
     pub model: Threats,
-    pub hp: i64,
+    pub hp: u64,
     pub guns: u64,
     pub fuel: u64,
 }
