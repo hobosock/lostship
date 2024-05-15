@@ -35,6 +35,7 @@ pub struct Combat {
     pub scout_turns: Vec<bool>,
     pub enemy_turns: Vec<bool>,
     pub scout_half: bool,
+    pub laser_fired: bool, // has mining laser been fired this turn?
 }
 
 /// logic for scout attack - modifies roll based on pilot rank and returns damage

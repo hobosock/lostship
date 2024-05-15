@@ -400,6 +400,31 @@ fn a_key_press(app: &mut App) {
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
             combat.scout_turns[scout_pos] = true;
         }
+
+        app.combat = Some(combat); // rewrap and assign to app state
+    }
+}
+
+/// logic for m key press
+/// if in combat past first round, triggers mining laser attack on selected enemy
+fn m_key_press(app: &mut App) {
+    if app.combat.is_some()
+        && app.combat.as_ref().unwrap().scout_half
+        && app.combat_enemy_state.selected().is_some()
+        && !app.combat.as_ref().unwrap().laser_fired
+    {
+        let mut combat = app.combat.clone().unwrap();
+        let enemy_pos = app.combat_enemy_state.selected().unwrap();
+        let enemy = combat.enemy_stats[enemy_pos].clone();
+        let target_ok = if enemy.fuel > 0 && enemy.hp > 0 {
+            true
+        } else {
+            false
+        };
+        if target_ok && combat.rounds > 1 {
+            // TODO: mining laser attack
+        }
+        // TODO: update combat and wrap back up
     }
 }
 
@@ -436,6 +461,7 @@ fn n_key_press(app: &mut App) {
                     enemy_stats: threats_to_fighters(&enemy_vec),
                     enemy_formation: enemy_vec,
                     scout_half: true,
+                    laser_fired: false,
                 });
                 app.jump_step = JumpStep::Step3;
             }
@@ -449,6 +475,7 @@ fn n_key_press(app: &mut App) {
                     scout_turns: vec![false; 6],
                     enemy_turns: vec![false, false],
                     scout_half: true,
+                    laser_fired: false,
                 });
                 app.in_combat = true;
             }
