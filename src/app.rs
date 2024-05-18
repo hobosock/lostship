@@ -497,15 +497,37 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
-                    app.parts += search_wreckage(app.combat.clone().unwrap().enemy_formation);
+                    let parts = search_wreckage(app.combat.clone().unwrap().enemy_formation);
+                    app.parts += parts;
+                    app.game_text = format!(
+                        "You search through the wreckage and recover {} parts.",
+                        parts
+                    );
                     app.jump_step = JumpStep::Step5;
                 }
                 JumpStep::Step5 => {
                     let (fuel, scan_result) = system_scan(app.leaps_since_incident);
                     app.fuel += fuel;
+                    app.game_text = format!(
+                        "Scanning system... {} - gathered {} fuel.  Make repairs and upkeep.",
+                        scan_result, fuel
+                    );
+                    // TODO: handle anomoly and home scans
                     app.jump_step = JumpStep::Step6;
                 }
-                JumpStep::Step6 => {}
+                JumpStep::Step6 => {
+                    // scouts at 50% are repaired for free
+                    // inoperable scouts can be repaired for 1 part
+                    // each point of hull damage can be repaired for 1 part
+                    // a scout can be scrapped for +4 parts
+                    // repairing any system requires 2 parts
+                    // upgrading a system costs 4 parts
+                    // building a new scout costs 6 parts
+                    // after every 5th leap you get a free upgrade
+                    // injured pilots heal according to sick bay - do this last
+                    // inoperable sick bay means newly injured pilots die
+                    // start training up new pilots
+                }
                 JumpStep::Step7 => {}
             }
         }
