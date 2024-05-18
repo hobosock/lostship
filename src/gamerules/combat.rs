@@ -185,6 +185,9 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
     for (i, turn) in combat.enemy_turns.clone().iter().enumerate() {
         if !turn {
             combat.enemy_turns[i] = true;
+            if combat.enemy_stats[i].hp == 0 {
+                continue; // stops from hanging on dead fighter
+            }
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
                 if enemy_attack() {

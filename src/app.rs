@@ -483,7 +483,7 @@ fn n_key_press(app: &mut App) {
                 JumpStep::Step3 => {
                     // TODO: just create a battle for combat testing for now
                     app.combat = Some(Combat {
-                        rounds: 0,
+                        rounds: 1,
                         scout_formation: app.scouts.to_vec(),
                         enemy_formation: vec![Threats::Mk1, Threats::Mk2],
                         enemy_stats: threats_to_fighters(&vec![Threats::Mk1, Threats::Mk2]),
@@ -513,6 +513,20 @@ fn n_key_press(app: &mut App) {
             if app.combat.is_some() && !app.combat.as_ref().unwrap().scout_half {
                 let mut combat = app.combat.clone().unwrap();
                 enemy_turn(&mut combat, app);
+                app.combat = Some(combat);
+            } else if app.combat.is_some() && app.combat.as_ref().unwrap().scout_half {
+                // TODO: debug only, delete this branch
+                let mut combat = app.combat.clone().unwrap();
+                combat.combat_text = format!(
+                    "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
+                    combat.scout_turns[0],
+                    combat.scout_turns[1],
+                    combat.scout_turns[2],
+                    combat.scout_turns[3],
+                    combat.scout_turns[4],
+                    combat.scout_turns[5],
+                    combat.laser_fired,
+                );
                 app.combat = Some(combat);
             }
         }
