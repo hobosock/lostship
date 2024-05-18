@@ -11,7 +11,7 @@ use std::io::{self, stdout, Stdout};
 use crate::{
     app::App,
     gamerules::{
-        combat,
+        combat::{self, combat_to_app},
         pilot::{PilotStatus, Rank},
         ship::ShipDamage,
         threat::{Fighter, Threats},
@@ -339,6 +339,12 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
     if app.in_combat && app.combat.is_some() {
         let mut combat = app.combat.clone().unwrap();
 
+        // check if combat is resolved
+        if combat.enemy_stats.iter().all(|x| x.hp == 0 && x.fuel == 0) {
+            app.combat = None;
+            app.in_combat = false;
+        }
+
         // reset pilot information in case order changed
         // TODO: maybe don't want to do this during a combat phase?
         for i in 0..app.scouts.len() {
@@ -468,8 +474,10 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             .highlight_symbol(">>");
         frame.render_stateful_widget(enemy_table, ship_chunks[1], &mut app.combat_enemy_state);
 
+        combat_to_app(&combat, app);
         app.combat = Some(combat);
     } else {
+        // TODO: somehow wipe combat tab after it's resolved?
         let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
         frame.render_widget(paragraph, chunk);
     }

@@ -185,18 +185,18 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
     for (i, turn) in combat.enemy_turns.clone().iter().enumerate() {
         if !turn {
             combat.enemy_turns[i] = true;
-            if combat.enemy_stats[i].hp == 0 {
+            if combat.enemy_stats[i].hp == 0 || combat.enemy_stats[i].fuel == 0 {
                 continue; // stops from hanging on dead fighter
             }
+            combat.combat_text = "".to_string();
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
-                combat.combat_text = "".to_string();
                 if enemy_attack() {
                     let target = enemy_targeting(&combat);
                     match target {
                         Targets::Superficial => {
                             combat.combat_text += &format!(
-                                "Enemy {} deals superficial damage!",
+                                "Enemy {} deals superficial damage!  ",
                                 combat.enemy_stats[i].model
                             );
                         }
@@ -204,7 +204,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::FifthScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[4]);
                             combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}",
+                                "Enemy {} damages {}.  Scout {}  ",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[4].ship.name,
                                 damage_text
@@ -213,7 +213,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::FourthScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[3]);
                             combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}",
+                                "Enemy {} damages {}.  Scout {}  ",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[3].ship.name,
                                 damage_text
@@ -222,7 +222,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::ThirdScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[2]);
                             combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}",
+                                "Enemy {} damages {}.  Scout {}  ",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[2].ship.name,
                                 damage_text
@@ -231,7 +231,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::SecondScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[1]);
                             combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}",
+                                "Enemy {} damages {}.  Scout {}  ",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[1].ship.name,
                                 damage_text
@@ -240,7 +240,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::LeadScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[0]);
                             combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}",
+                                "Enemy {} damages {}.  Scout {}  ",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[0].ship.name,
                                 damage_text
@@ -249,48 +249,48 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::Hull => {
                             app.hull_damage += 1;
                             combat.combat_text += &format!(
-                                "Enemy {} damages the hull.",
+                                "Enemy {} damages the hull.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                         Targets::Engines => {
                             app.engine.status = subsystem_damage(&app.engine.status);
                             combat.combat_text += &format!(
-                                "Enemy {} damages the engines.",
+                                "Enemy {} damages the engines.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                         Targets::MiningLaser => {
                             app.mining_laser.status = subsystem_damage(&app.mining_laser.status);
                             combat.combat_text += &format!(
-                                "Enemy {} damages the mining laser.",
+                                "Enemy {} damages the mining laser.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                         Targets::ScoutingBay => {
                             app.scout_bay.status = subsystem_damage(&app.scout_bay.status);
                             combat.combat_text += &format!(
-                                "Enemy {} damages the scout bay.",
+                                "Enemy {} damages the scout bay.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                         Targets::SickBay => {
                             app.sick_bay.status = subsystem_damage(&app.sick_bay.status);
                             combat.combat_text += &format!(
-                                "Enemy {} damages the sick bay.",
+                                "Enemy {} damages the sick bay.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                         Targets::Sensors => {
                             app.sensors.status = subsystem_damage(&app.sensors.status);
                             combat.combat_text += &format!(
-                                "Enemy {} damages the sensors.",
+                                "Enemy {} damages the sensors.  ",
                                 combat.enemy_stats[i].model,
                             );
                         }
                     }
                 } else {
-                    combat.combat_text += "Miss!";
+                    combat.combat_text += "Miss!  ";
                 }
             }
             break;
@@ -305,5 +305,14 @@ pub fn subsystem_damage(status: &Status) -> Status {
         Status::Serviceable => Status::BarelyFunctioning,
         Status::BarelyFunctioning => Status::Inoperable,
         Status::Inoperable => Status::Inoperable,
+    }
+}
+
+// NOTE: there is probably a better way to handle this, I'll worry about that later
+/// copies scout changes from the combat struct back into the app struct
+pub fn combat_to_app(combat: &Combat, app: &mut App) {
+    for (i, scout) in combat.scout_formation.iter().enumerate() {
+        app.scouts[i] = scout.clone();
+        app.pilots[i] = scout.pilot.clone();
     }
 }
