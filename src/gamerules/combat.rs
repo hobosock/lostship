@@ -1,3 +1,5 @@
+use std::fmt::write;
+
 use crate::app::App;
 
 use super::{
@@ -36,6 +38,7 @@ pub struct Combat {
     pub enemy_turns: Vec<bool>,
     pub scout_half: bool,
     pub laser_fired: bool, // has mining laser been fired this turn?
+    pub combat_text: String,
 }
 
 /// logic for scout attack - modifies roll based on pilot rank and returns damage
@@ -72,8 +75,7 @@ pub fn enemy_attack() -> bool {
 }
 
 /// logic for enemy targeting - handles 1st round, 2nd round and after
-pub fn enemy_targeting(app: &mut App) -> Targets {
-    let combat = app.combat.clone().unwrap();
+pub fn enemy_targeting(combat: &Combat) -> Targets {
     let roll_result = if combat.rounds > 1 {
         roll(6) + roll(6)
     } else {
@@ -175,5 +177,75 @@ pub fn enemy_damage(damage: u64, hp: u64) -> u64 {
         0
     } else {
         hp - damage
+    }
+}
+
+/// function for rendering enemy turns in combat
+pub fn enemy_turn(combat: &mut Combat) {
+    for (i, turn) in combat.enemy_turns.clone().iter().enumerate() {
+        if !turn {
+            combat.enemy_turns[i] = true;
+            let guns = combat.enemy_stats[i].guns;
+            for j in 0..guns {
+                if enemy_attack() {
+                    let target = enemy_targeting(&combat);
+                    match target {
+                        Targets::Superficial => {
+                            combat.combat_text = format!(
+                                "Enemy {} deals superficial damage!",
+                                combat.enemy_stats[i].model
+                            );
+                        }
+                        // TODO: check for hull damage instead
+                        Targets::FifthScout => {
+                            let damage_text = scout_damage(&mut combat.scout_formation[4]);
+                            combat.combat_text = format!(
+                                "Enemy {} damages {}.  Scout {}",
+                                combat.enemy_stats[i].model,
+                                combat.scout_formation[4].ship.name,
+                                damage_text
+                            );
+                        }
+                        Targets::FourthScout => {
+                            let damage_text = scout_damage(&mut combat.scout_formation[3]);
+                            combat.combat_text = format!(
+                                "Enemy {} damages {}.  Scout {}",
+                                combat.enemy_stats[i].model,
+                                combat.scout_formation[3].ship.name,
+                                damage_text
+                            );
+                        }
+                        Targets::ThirdScout => {
+                            let damage_text = scout_damage(&mut combat.scout_formation[2]);
+                            combat.combat_text = format!(
+                                "Enemy {} damages {}.  Scout {}",
+                                combat.enemy_stats[i].model,
+                                combat.scout_formation[2].ship.name,
+                                damage_text
+                            );
+                        }
+                        Targets::SecondScout => {
+                            let damage_text = scout_damage(&mut combat.scout_formation[1]);
+                            combat.combat_text = format!(
+                                "Enemy {} damages {}.  Scout {}",
+                                combat.enemy_stats[i].model,
+                                combat.scout_formation[1].ship.name,
+                                damage_text
+                            );
+                        }
+                        Targets::LeadScout => {
+                            let damage_text = scout_damage(&mut combat.scout_formation[0]);
+                            combat.combat_text = format!(
+                                "Enemy {} damages {}.  Scout {}",
+                                combat.enemy_stats[i].model,
+                                combat.scout_formation[0].ship.name,
+                                damage_text
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 }

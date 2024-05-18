@@ -166,6 +166,18 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         }
         MenuTabs::Combat => {
             draw_main_combat_tab(app, frame, chunks[1], main_block);
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<Up>/<Down>".yellow().bold(),
+                " Change selection ".into(),
+                "<Left>/<Right>".yellow().bold(),
+                " Change Table ".into(),
+                "<A>".yellow().bold(),
+                " Scout Attack ".into(),
+                "<M>".yellow().bold(),
+                " Mining Laser ".into(),
+            ])]);
         }
         MenuTabs::About => {
             draw_main_about_tab(frame, chunks[1], main_block);
@@ -333,8 +345,13 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             app.scouts[i].pilot = app.pilots[i].clone();
         }
 
+        if combat.rounds == 1 {
+            combat.laser_fired = true;
+        }
+
+        // TODO: should this be mode dependent?
         // check to see if all of scouts have taken a turn
-        if combat.scout_turns.iter().all(|x| *x == true) {
+        if combat.scout_turns.iter().all(|x| *x == true) && combat.laser_fired {
             combat.scout_half = false; // now enemy turn
             combat.scout_turns = vec![false; combat.scout_formation.len()]; // reset
         }
@@ -352,7 +369,11 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
         let sub_chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(3)])
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Min(3),
+                Constraint::Length(3),
+            ])
             .split(chunk);
         let ship_chunks = Layout::default()
             .direction(Direction::Horizontal)
@@ -369,6 +390,8 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             combat.rounds, colony_ship_text
         ));
         frame.render_widget(paragraph, sub_chunks[0]);
+        let combat_paragraph = Paragraph::new(combat.combat_text.clone());
+        frame.render_widget(combat_paragraph, sub_chunks[2]);
 
         let ship_border = if app.combat_select {
             Borders::ALL
@@ -382,7 +405,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         };
 
         let mut rows: Vec<Row> = Vec::new();
-        for scout in combat.scout_formation {
+        for scout in &combat.scout_formation {
             let damage_text = match scout.ship.damage {
                 ShipDamage::Normal => scout.ship.damage.to_string().green(),
                 ShipDamage::Half => scout.ship.damage.to_string().yellow(),
@@ -419,7 +442,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         frame.render_stateful_widget(scout_table, ship_chunks[0], &mut app.combat_scout_state);
 
         let mut rows: Vec<Row> = Vec::new();
-        for enemy in combat.enemy_formation {
+        for enemy in &combat.enemy_formation {
             let fighter = match enemy {
                 Threats::None => continue,
                 Threats::Mk1 => Fighter::mk1(),
@@ -449,6 +472,8 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             .highlight_style(Style::default().reversed())
             .highlight_symbol(">>");
         frame.render_stateful_widget(enemy_table, ship_chunks[1], &mut app.combat_enemy_state);
+
+        app.combat = Some(combat);
     } else {
         let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
         frame.render_widget(paragraph, chunk);

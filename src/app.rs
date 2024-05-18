@@ -1,6 +1,6 @@
 use crate::{
     gamerules::{
-        combat::{enemy_damage, scout_attack, Combat},
+        combat::{enemy_damage, mining_laser, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{Pilot, PilotStatus},
         ship::{Scout, ShipDamage, SubSystem},
@@ -157,6 +157,7 @@ impl App {
                 KeyCode::Char('w') => w_key_press(self),
                 KeyCode::Char('s') => s_key_press(self),
                 KeyCode::Char('a') => a_key_press(self),
+                KeyCode::Char('m') => m_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
                 KeyCode::Left => left_press(self),
@@ -399,6 +400,12 @@ fn a_key_press(app: &mut App) {
             let damage = scout_attack(&scout);
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
             combat.scout_turns[scout_pos] = true;
+            combat.combat_text = format!(
+                "{} deals {} damage to {}",
+                scout.pilot.name, damage, enemy.model
+            );
+        } else {
+            combat.combat_text = "Make sure a valid scout and target are selected.".to_string();
         }
 
         app.combat = Some(combat); // rewrap and assign to app state
@@ -422,9 +429,14 @@ fn m_key_press(app: &mut App) {
             false
         };
         if target_ok && combat.rounds > 1 {
-            // TODO: mining laser attack
+            let damage = mining_laser(app.mining_laser.upgrade);
+            combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+            combat.laser_fired = true;
+            combat.combat_text = format!("Mining laser deals {} damage to {}", damage, enemy.model);
+        } else {
+            combat.combat_text = "Mining laser available starting in round 2.  Make sure a valid target is selected.".to_string();
         }
-        // TODO: update combat and wrap back up
+        app.combat = Some(combat);
     }
 }
 
@@ -462,6 +474,7 @@ fn n_key_press(app: &mut App) {
                     enemy_formation: enemy_vec,
                     scout_half: true,
                     laser_fired: false,
+                    combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
                 });
                 app.jump_step = JumpStep::Step3;
             }
@@ -476,6 +489,7 @@ fn n_key_press(app: &mut App) {
                     enemy_turns: vec![false, false],
                     scout_half: true,
                     laser_fired: false,
+                    combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
                 });
                 app.in_combat = true;
             }
