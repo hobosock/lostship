@@ -1,6 +1,7 @@
 pub mod combat;
 pub mod game_functions;
 pub mod pilot;
+pub mod scout;
 pub mod ship;
 pub mod threat;
 

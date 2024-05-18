@@ -374,6 +374,16 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             }
         }
 
+        // skip turns for Scouts that are inoperable, destroyed, or KIA
+        for (i, scout) in combat.scout_formation.iter().enumerate() {
+            if scout.ship.damage == ShipDamage::Inoperable
+                || scout.ship.damage == ShipDamage::Destroyed
+                || scout.pilot.status == PilotStatus::Kia
+            {
+                combat.scout_turns[i] = true;
+            }
+        }
+
         let sub_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([

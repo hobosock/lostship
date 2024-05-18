@@ -25,7 +25,7 @@ impl fmt::Display for Status {
 }
 
 /// Scout damage
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub enum ShipDamage {
     #[default]
     Normal,
