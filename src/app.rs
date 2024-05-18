@@ -200,12 +200,17 @@ fn enter_press(app: &mut App) {
     match app.active_tab {
         MenuTabs::Hangar => {
             if app.edit_target.is_some() {
-                app.scouts[app.edit_target.unwrap()].ship.name = app.edit_string.clone();
+                app.scouts[app.edit_target.unwrap()]
+                    .ship
+                    .name
+                    .clone_from(&app.edit_string);
             }
         }
         MenuTabs::Crew => {
             if app.edit_target.is_some() {
-                app.pilots[app.edit_target.unwrap()].name = app.edit_string.clone();
+                app.pilots[app.edit_target.unwrap()]
+                    .name
+                    .clone_from(&app.edit_string);
             }
         }
         _ => {}
@@ -380,21 +385,12 @@ fn a_key_press(app: &mut App) {
         let turn_ok = combat.scout_turns[scout_pos];
         let enemy_pos = app.combat_enemy_state.selected().unwrap();
         let enemy = combat.enemy_stats[enemy_pos].clone();
-        let ship_ok = match scout.ship.damage {
-            ShipDamage::Normal => true,
-            ShipDamage::Half => true,
-            _ => false,
-        };
-        let pilot_ok = match scout.pilot.status {
-            PilotStatus::Normal => true,
-            PilotStatus::Injured => true,
-            _ => false,
-        };
-        let target_ok = if enemy.fuel > 0 && enemy.hp > 0 {
-            true
-        } else {
-            false
-        };
+        let ship_ok = matches!(scout.ship.damage, ShipDamage::Normal | ShipDamage::Half);
+        let pilot_ok = matches!(
+            scout.pilot.status,
+            PilotStatus::Normal | PilotStatus::Injured
+        );
+        let target_ok = enemy.fuel > 0 && enemy.hp > 0; // bool literal?
 
         if ship_ok && pilot_ok && target_ok && !turn_ok {
             let damage = scout_attack(&scout);
@@ -423,11 +419,7 @@ fn m_key_press(app: &mut App) {
         let mut combat = app.combat.clone().unwrap();
         let enemy_pos = app.combat_enemy_state.selected().unwrap();
         let enemy = combat.enemy_stats[enemy_pos].clone();
-        let target_ok = if enemy.fuel > 0 && enemy.hp > 0 {
-            true
-        } else {
-            false
-        };
+        let target_ok = enemy.fuel > 0 && enemy.hp > 0;
         if target_ok && combat.rounds > 1 {
             let damage = mining_laser(app.mining_laser.upgrade);
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
@@ -527,8 +519,11 @@ fn n_key_press(app: &mut App) {
                     // injured pilots heal according to sick bay - do this last
                     // inoperable sick bay means newly injured pilots die
                     // start training up new pilots
+                    app.jump_step = JumpStep::Step7;
                 }
-                JumpStep::Step7 => {}
+                JumpStep::Step7 => {
+                    app.jump_step = JumpStep::Step1;
+                }
             }
         }
         MenuTabs::Combat => {

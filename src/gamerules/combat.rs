@@ -1,4 +1,4 @@
-use std::fmt::write;
+use std::ops::RangeBounds;
 
 use crate::app::App;
 
@@ -54,9 +54,7 @@ pub fn scout_attack(scout: &Scout) -> u64 {
         Rank::Ace => modifier += 2,
     };
     let attack_result = roll(6) + modifier;
-    if attack_result == 5 {
-        1
-    } else if attack_result == 6 && scout.pilot.status == PilotStatus::Injured {
+    if attack_result == 5 || (attack_result == 6 && scout.pilot.status == PilotStatus::Injured) {
         1
     } else if attack_result == 6 && scout.pilot.status == PilotStatus::Normal {
         2
@@ -67,11 +65,7 @@ pub fn scout_attack(scout: &Scout) -> u64 {
 
 /// enemy attack success roll
 pub fn enemy_attack() -> bool {
-    if roll(6) > 3 {
-        true
-    } else {
-        false
-    }
+    roll(6) > 3
 }
 
 /// logic for enemy targeting - handles 1st round, 2nd round and after
@@ -160,7 +154,7 @@ pub fn mining_laser(upgraded: bool) -> u64 {
     if upgraded {
         roll_result += 1;
     }
-    if roll_result >= 4 && roll_result <= 5 {
+    if (4..=5).contains(&roll_result) {
         1
     } else if roll_result == 6 {
         2
@@ -192,7 +186,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
                 if enemy_attack() {
-                    let target = enemy_targeting(&combat);
+                    let target = enemy_targeting(combat);
                     match target {
                         Targets::Superficial => {
                             combat.combat_text += &format!(

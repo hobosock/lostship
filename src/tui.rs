@@ -11,10 +11,10 @@ use std::io::{self, stdout, Stdout};
 use crate::{
     app::App,
     gamerules::{
-        combat::{self, combat_to_app},
+        combat::combat_to_app,
+        game_functions::JumpStep,
         pilot::{PilotStatus, Rank},
         ship::ShipDamage,
-        threat::{Fighter, Threats},
     },
     resources::{about::ABOUT_STR, help::HELP_STR},
 };
@@ -343,6 +343,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         if combat.enemy_stats.iter().all(|x| x.hp == 0 && x.fuel == 0) {
             app.combat = None;
             app.in_combat = false;
+            app.jump_step = JumpStep::Step4;
         }
 
         // reset pilot information in case order changed
@@ -357,11 +358,11 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
         // TODO: should this be mode dependent?
         // check to see if all of scouts have taken a turn
-        if combat.scout_turns.iter().all(|x| *x == true) && combat.laser_fired {
+        if combat.scout_turns.iter().all(|x| *x) && combat.laser_fired {
             combat.scout_half = false; // now enemy turn
             combat.scout_turns = vec![false; combat.scout_formation.len()]; // reset
         }
-        if combat.enemy_turns.iter().all(|x| *x == true) {
+        if combat.enemy_turns.iter().all(|x| *x) {
             combat.scout_half = true;
             combat.enemy_turns = vec![false; combat.enemy_formation.len()];
             combat.laser_fired = false;

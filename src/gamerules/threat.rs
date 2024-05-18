@@ -61,7 +61,7 @@ impl Fighter {
 
 /// turn vector of Threats enum to vector of Fighter Structs
 /// I know this is dumb, will fix later
-pub fn threats_to_fighters(v: &Vec<Threats>) -> Vec<Fighter> {
+pub fn threats_to_fighters(v: &[Threats]) -> Vec<Fighter> {
     let mut fighters = Vec::new();
     for threat in v.iter() {
         match threat {

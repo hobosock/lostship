@@ -8,8 +8,6 @@
  * 7. leap again
  */
 
-use std::ops::RangeBounds;
-
 use crate::app::App;
 
 use super::{roll, threat::Threats, ScanResult};
