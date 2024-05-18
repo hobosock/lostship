@@ -442,13 +442,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         frame.render_stateful_widget(scout_table, ship_chunks[0], &mut app.combat_scout_state);
 
         let mut rows: Vec<Row> = Vec::new();
-        for enemy in &combat.enemy_formation {
-            let fighter = match enemy {
-                Threats::None => continue,
-                Threats::Mk1 => Fighter::mk1(),
-                Threats::Mk2 => Fighter::mk2(),
-                Threats::Mk3 => Fighter::mk3(),
-            };
+        for fighter in &combat.enemy_stats {
             rows.push(Row::new(vec![
                 Cell::from(fighter.model.to_string()),
                 Cell::from(fighter.guns.to_string()),
