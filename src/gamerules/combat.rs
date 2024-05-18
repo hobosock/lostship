@@ -5,7 +5,7 @@ use crate::app::App;
 use super::{
     pilot::{PilotStatus, Rank},
     roll,
-    ship::{Scout, ShipDamage},
+    ship::{Scout, ShipDamage, Status},
     threat::{Fighter, Threats},
 };
 
@@ -181,17 +181,18 @@ pub fn enemy_damage(damage: u64, hp: u64) -> u64 {
 }
 
 /// function for rendering enemy turns in combat
-pub fn enemy_turn(combat: &mut Combat) {
+pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
     for (i, turn) in combat.enemy_turns.clone().iter().enumerate() {
         if !turn {
             combat.enemy_turns[i] = true;
             let guns = combat.enemy_stats[i].guns;
-            for j in 0..guns {
+            for _ in 0..guns {
                 if enemy_attack() {
                     let target = enemy_targeting(&combat);
+                    combat.combat_text = "".to_string();
                     match target {
                         Targets::Superficial => {
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} deals superficial damage!",
                                 combat.enemy_stats[i].model
                             );
@@ -199,7 +200,7 @@ pub fn enemy_turn(combat: &mut Combat) {
                         // TODO: check for hull damage instead
                         Targets::FifthScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[4]);
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} damages {}.  Scout {}",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[4].ship.name,
@@ -208,7 +209,7 @@ pub fn enemy_turn(combat: &mut Combat) {
                         }
                         Targets::FourthScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[3]);
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} damages {}.  Scout {}",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[3].ship.name,
@@ -217,7 +218,7 @@ pub fn enemy_turn(combat: &mut Combat) {
                         }
                         Targets::ThirdScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[2]);
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} damages {}.  Scout {}",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[2].ship.name,
@@ -226,7 +227,7 @@ pub fn enemy_turn(combat: &mut Combat) {
                         }
                         Targets::SecondScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[1]);
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} damages {}.  Scout {}",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[1].ship.name,
@@ -235,17 +236,71 @@ pub fn enemy_turn(combat: &mut Combat) {
                         }
                         Targets::LeadScout => {
                             let damage_text = scout_damage(&mut combat.scout_formation[0]);
-                            combat.combat_text = format!(
+                            combat.combat_text += &format!(
                                 "Enemy {} damages {}.  Scout {}",
                                 combat.enemy_stats[i].model,
                                 combat.scout_formation[0].ship.name,
                                 damage_text
                             );
                         }
-                        _ => {}
+                        Targets::Hull => {
+                            app.hull_damage += 1;
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the hull.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
+                        Targets::Engines => {
+                            app.engine.status = subsystem_damage(&app.engine.status);
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the engines.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
+                        Targets::MiningLaser => {
+                            app.mining_laser.status = subsystem_damage(&app.mining_laser.status);
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the mining laser.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
+                        Targets::ScoutingBay => {
+                            app.scout_bay.status = subsystem_damage(&app.scout_bay.status);
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the scout bay.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
+                        Targets::SickBay => {
+                            app.sick_bay.status = subsystem_damage(&app.sick_bay.status);
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the sick bay.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
+                        Targets::Sensors => {
+                            app.sensors.status = subsystem_damage(&app.sensors.status);
+                            combat.combat_text += &format!(
+                                "Enemy {} damages the sensors.",
+                                combat.enemy_stats[i].model,
+                            );
+                        }
                     }
+                } else {
+                    combat.combat_text += "Miss!";
                 }
             }
+            break;
         }
+    }
+}
+
+/// decrements sub system rating when sustaining damage
+pub fn subsystem_damage(status: &Status) -> Status {
+    match status {
+        Status::Normal => Status::Serviceable,
+        Status::Serviceable => Status::BarelyFunctioning,
+        Status::BarelyFunctioning => Status::Inoperable,
+        Status::Inoperable => Status::Inoperable,
     }
 }

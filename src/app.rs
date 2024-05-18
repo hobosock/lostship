@@ -1,6 +1,6 @@
 use crate::{
     gamerules::{
-        combat::{enemy_damage, mining_laser, scout_attack, Combat},
+        combat::{enemy_damage, enemy_turn, mining_laser, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{Pilot, PilotStatus},
         ship::{Scout, ShipDamage, SubSystem},
@@ -441,70 +441,81 @@ fn m_key_press(app: &mut App) {
 }
 
 /// logic for n key presses
-/// only active on Status tab, advances one step at a time and waits for combat to resolve
+/// only active on Status and Combat tabs, advances one step at a time and waits for combat to resolve
+/// on Combat tab, used to advance through enemy turn
 fn n_key_press(app: &mut App) {
-    if app.active_tab == MenuTabs::Status {
-        match app.jump_step {
-            JumpStep::Step1 => {
-                app.game_text += "Jumping into a new system ...";
-                leap_into_system(app);
-                app.jump_step = JumpStep::Step2;
+    match app.active_tab {
+        MenuTabs::Status => {
+            match app.jump_step {
+                JumpStep::Step1 => {
+                    app.game_text += "Jumping into a new system ...";
+                    leap_into_system(app);
+                    app.jump_step = JumpStep::Step2;
+                }
+                JumpStep::Step2 => {
+                    app.game_text = "Assessing threats ...".to_string();
+                    let scout_vec = Vec::from(app.scouts.clone());
+                    let enemy_vec = match assess_threat(app) {
+                        Some(ev) => {
+                            app.game_text += "Enemy ships are preparing to engage!";
+                            app.in_combat = true;
+                            ev
+                        }
+                        None => {
+                            app.game_text += "Sector clear.  Whew!";
+                            app.in_combat = false;
+                            vec![Threats::None]
+                        }
+                    };
+                    app.combat = Some(Combat {
+                        rounds: 1,
+                        scout_turns: vec![true; scout_vec.len()],
+                        scout_formation: scout_vec,
+                        enemy_turns: vec![true; enemy_vec.len()],
+                        enemy_stats: threats_to_fighters(&enemy_vec),
+                        enemy_formation: enemy_vec,
+                        scout_half: true,
+                        laser_fired: false,
+                        combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
+                    });
+                    app.jump_step = JumpStep::Step3;
+                }
+                JumpStep::Step3 => {
+                    // TODO: just create a battle for combat testing for now
+                    app.combat = Some(Combat {
+                        rounds: 0,
+                        scout_formation: app.scouts.to_vec(),
+                        enemy_formation: vec![Threats::Mk1, Threats::Mk2],
+                        enemy_stats: threats_to_fighters(&vec![Threats::Mk1, Threats::Mk2]),
+                        scout_turns: vec![false; 6],
+                        enemy_turns: vec![false, false],
+                        scout_half: true,
+                        laser_fired: false,
+                        combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
+                    });
+                    app.in_combat = true;
+                }
+                JumpStep::Step4 => {
+                    // TODO: error proof
+                    app.parts += search_wreckage(app.combat.clone().unwrap().enemy_formation);
+                    app.jump_step = JumpStep::Step5;
+                }
+                JumpStep::Step5 => {
+                    let (fuel, scan_result) = system_scan(app.leaps_since_incident);
+                    app.fuel += fuel;
+                    app.jump_step = JumpStep::Step6;
+                }
+                JumpStep::Step6 => {}
+                JumpStep::Step7 => {}
             }
-            JumpStep::Step2 => {
-                app.game_text = "Assessing threats ...".to_string();
-                let scout_vec = Vec::from(app.scouts.clone());
-                let enemy_vec = match assess_threat(app) {
-                    Some(ev) => {
-                        app.game_text += "Enemy ships are preparing to engage!";
-                        app.in_combat = true;
-                        ev
-                    }
-                    None => {
-                        app.game_text += "Sector clear.  Whew!";
-                        app.in_combat = false;
-                        vec![Threats::None]
-                    }
-                };
-                app.combat = Some(Combat {
-                    rounds: 1,
-                    scout_turns: vec![true; scout_vec.len()],
-                    scout_formation: scout_vec,
-                    enemy_turns: vec![true; enemy_vec.len()],
-                    enemy_stats: threats_to_fighters(&enemy_vec),
-                    enemy_formation: enemy_vec,
-                    scout_half: true,
-                    laser_fired: false,
-                    combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
-                });
-                app.jump_step = JumpStep::Step3;
-            }
-            JumpStep::Step3 => {
-                // TODO: just create a battle for combat testing for now
-                app.combat = Some(Combat {
-                    rounds: 0,
-                    scout_formation: app.scouts.to_vec(),
-                    enemy_formation: vec![Threats::Mk1, Threats::Mk2],
-                    enemy_stats: threats_to_fighters(&vec![Threats::Mk1, Threats::Mk2]),
-                    scout_turns: vec![false; 6],
-                    enemy_turns: vec![false, false],
-                    scout_half: true,
-                    laser_fired: false,
-                    combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
-                });
-                app.in_combat = true;
-            }
-            JumpStep::Step4 => {
-                // TODO: error proof
-                app.parts += search_wreckage(app.combat.clone().unwrap().enemy_formation);
-                app.jump_step = JumpStep::Step5;
-            }
-            JumpStep::Step5 => {
-                let (fuel, scan_result) = system_scan(app.leaps_since_incident);
-                app.fuel += fuel;
-                app.jump_step = JumpStep::Step6;
-            }
-            JumpStep::Step6 => {}
-            JumpStep::Step7 => {}
         }
+        MenuTabs::Combat => {
+            if app.combat.is_some() && !app.combat.as_ref().unwrap().scout_half {
+                let mut combat = app.combat.clone().unwrap();
+                enemy_turn(&mut combat, app);
+                app.combat = Some(combat);
+            }
+        }
+        _ => {}
     }
 }
