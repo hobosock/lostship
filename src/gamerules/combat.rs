@@ -190,9 +190,9 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
             }
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
+                combat.combat_text = "".to_string();
                 if enemy_attack() {
                     let target = enemy_targeting(&combat);
-                    combat.combat_text = "".to_string();
                     match target {
                         Targets::Superficial => {
                             combat.combat_text += &format!(

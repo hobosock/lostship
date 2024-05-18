@@ -358,6 +358,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         if combat.enemy_turns.iter().all(|x| *x == true) {
             combat.scout_half = true;
             combat.enemy_turns = vec![false; combat.enemy_formation.len()];
+            combat.laser_fired = false;
             // end of round, +/- fuel, round counter, etc.
             combat.rounds += 1;
             for (i, enemy) in app.combat.as_ref().unwrap().enemy_stats.iter().enumerate() {
