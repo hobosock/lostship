@@ -15,7 +15,7 @@ impl fmt::Display for PilotStatus {
             PilotStatus::Injured => "Injured",
             PilotStatus::Kia => "KIA",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 
@@ -34,7 +34,7 @@ impl fmt::Display for Rank {
             Rank::Veteran => "Veteran",
             Rank::Ace => "Ace",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 

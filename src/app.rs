@@ -7,7 +7,7 @@ use crate::{
         threat::{threats_to_fighters, Threats},
         Leap,
     },
-    tui::*,
+    tui::{select_down, select_up, ui, MenuTabs, Tui},
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{prelude::*, widgets::TableState};
@@ -85,7 +85,7 @@ impl Default for App {
             pilot_assignment: [0, 1, 2, 3, 4, 5],
             in_combat: false,
             combat: None,
-            game_text: "".to_string(),
+            game_text: String::new(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
             crew_state: TableState::default(),
@@ -118,7 +118,7 @@ impl App {
     fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
+                self.handle_key_event(key_event);
             }
             _ => {}
         };
@@ -478,7 +478,7 @@ fn n_key_press(app: &mut App) {
                         rounds: 1,
                         scout_formation: app.scouts.to_vec(),
                         enemy_formation: vec![Threats::Mk1, Threats::Mk2],
-                        enemy_stats: threats_to_fighters(&vec![Threats::Mk1, Threats::Mk2]),
+                        enemy_stats: threats_to_fighters(&[Threats::Mk1, Threats::Mk2]),
                         scout_turns: vec![false; 6],
                         enemy_turns: vec![false, false],
                         scout_half: true,
@@ -489,20 +489,17 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
-                    let parts = search_wreckage(app.combat.clone().unwrap().enemy_formation);
+                    let parts = search_wreckage(&app.combat.clone().unwrap().enemy_formation);
                     app.parts += parts;
-                    app.game_text = format!(
-                        "You search through the wreckage and recover {} parts.",
-                        parts
-                    );
+                    app.game_text =
+                        format!("You search through the wreckage and recover {parts} parts.");
                     app.jump_step = JumpStep::Step5;
                 }
                 JumpStep::Step5 => {
                     let (fuel, scan_result) = system_scan(app.leaps_since_incident);
                     app.fuel += fuel;
                     app.game_text = format!(
-                        "Scanning system... {} - gathered {} fuel.  Make repairs and upkeep.",
-                        scan_result, fuel
+                        "Scanning system... {scan_result} - gathered {fuel} fuel.  Make repairs and upkeep."
                     );
                     // TODO: handle anomoly and home scans
                     app.jump_step = JumpStep::Step6;

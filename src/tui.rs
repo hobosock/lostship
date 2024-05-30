@@ -1,10 +1,16 @@
-use crossterm::{execute, terminal::*};
+use crossterm::{
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use ratatui::{
     layout::Layout,
     prelude::*,
     style::Stylize,
     symbols::border,
-    widgets::{block::*, *},
+    widgets::{
+        block::{Block, Position, Title},
+        {Borders, Cell, Paragraph, Row, Table, Tabs, Wrap},
+    },
 };
 use std::io::{self, stdout, Stdout};
 
@@ -440,7 +446,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
                 Cell::from(scout.ship.name.clone()),
                 Cell::from(pilot_text),
                 Cell::from(damage_text),
-            ]))
+            ]));
         }
         let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
             .style(Style::default().cyan().bold())
@@ -466,7 +472,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
                 Cell::from(fighter.guns.to_string()),
                 Cell::from(fighter.fuel.to_string()),
                 Cell::from(fighter.hp.to_string()),
-            ]))
+            ]));
         }
         let header_row = Row::new(vec!["Type", "Guns", "Fuel", "HP"])
             .style(Style::default().cyan().bold())

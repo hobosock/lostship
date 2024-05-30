@@ -16,7 +16,7 @@ impl fmt::Display for Threats {
             Threats::Mk2 => "MK2",
             Threats::Mk3 => "MK3",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 

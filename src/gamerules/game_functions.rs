@@ -87,10 +87,10 @@ pub fn assess_threat(app: &App) -> Option<Vec<Threats>> {
 }
 
 /// Step 4. search wreckage for parts
-pub fn search_wreckage(threats: Vec<Threats>) -> u64 {
+pub fn search_wreckage(threats: &[Threats]) -> u64 {
     let mut bmk2 = false;
     let mut bmk3 = false;
-    for threat in threats.iter() {
+    for threat in threats {
         if *threat == Threats::Mk2 {
             bmk2 = true;
         } else if *threat == Threats::Mk3 {

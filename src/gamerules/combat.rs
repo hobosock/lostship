@@ -1,5 +1,3 @@
-use std::ops::RangeBounds;
-
 use crate::app::App;
 
 use super::{
@@ -182,7 +180,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
             if combat.enemy_stats[i].hp == 0 || combat.enemy_stats[i].fuel == 0 {
                 continue; // stops from hanging on dead fighter
             }
-            combat.combat_text = "".to_string();
+            combat.combat_text = String::new();
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
                 if enemy_attack() {

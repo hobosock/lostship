@@ -20,7 +20,7 @@ impl fmt::Display for Status {
             Status::BarelyFunctioning => "Barely Functioning",
             Status::Inoperable => "Inoperable",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 
