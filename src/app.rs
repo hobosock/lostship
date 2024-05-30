@@ -11,7 +11,10 @@ use crate::{
     tui::{select_down, select_up, ui, MenuTabs, Tui},
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{prelude::*, widgets::TableState};
+use ratatui::{
+    prelude::*,
+    widgets::{ListState, TableState},
+};
 use std::io;
 
 // define the app
@@ -47,6 +50,7 @@ pub struct App {
     pub combat_select: bool, // indicates active table in Combat tab
     pub combat_scout_state: TableState,
     pub combat_enemy_state: TableState,
+    pub subsys_list_state: ListState,
 }
 
 impl Default for App {
@@ -96,6 +100,7 @@ impl Default for App {
             combat_select: true,
             combat_scout_state: TableState::default(),
             combat_enemy_state: TableState::default(),
+            subsys_list_state: ListState::default(),
         }
     }
 }

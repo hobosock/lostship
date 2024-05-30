@@ -101,47 +101,11 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     // bottom panel to display keys
     let instructions_block = Block::default().borders(Borders::ALL);
     let mut instructions_text = Text::from(vec![Line::from(vec!["<Q> Quit".into()])]);
-    let mut main_text = Text::from(vec![Line::from(vec!["Placeholder".into()])]);
 
     // change bottom two chunks based on selected tab
     match app.active_tab {
         MenuTabs::Status => {
-            // TODO: change color based on number, status
-            main_text = Text::from(vec![
-                Line::from(vec![
-                    "LEAPS SINCE INCIDENT: ".into(),
-                    app.leaps_since_incident.to_string().into(),
-                ]),
-                Line::from(vec!["Fuel: ".into(), app.fuel.to_string().into()]),
-                Line::from(vec!["Parts: ".into(), app.parts.to_string().into()]),
-                Line::from(vec![
-                    "Hull Damage: ".into(),
-                    app.hull_damage.to_string().into(),
-                ]),
-                Line::from(vec![
-                    "Engines: ".into(),
-                    format!("{}", app.engine.status).into(),
-                ]),
-                Line::from(vec![
-                    "Mining Laser: ".into(),
-                    format!("{}", app.mining_laser.status).into(),
-                ]),
-                Line::from(vec![
-                    "Scout Bay: ".into(),
-                    format!("{}", app.scout_bay.status).into(),
-                ]),
-                Line::from(vec![
-                    "Sick Bay: ".into(),
-                    format!("{}", app.sick_bay.status).into(),
-                ]),
-                Line::from(vec![
-                    "Sensors: ".into(),
-                    format!("{}", app.sensors.status).into(),
-                ]),
-                Line::from(vec![app.game_text.as_str().into()]),
-            ]);
-            let main_thing = Paragraph::new(main_text).block(main_block);
-            frame.render_widget(main_thing, chunks[1]);
+            draw_main_status_tab(app, frame, chunks[1], main_block);
         }
         MenuTabs::Log => {}
         MenuTabs::Hangar => {
@@ -217,6 +181,56 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         let edit_paragraph = Paragraph::new(app.edit_string.clone()).block(popup_block);
         frame.render_widget(edit_paragraph, popup_area);
     }
+}
+
+/// draws center chunk of Status tab
+fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    main_block.render(chunk, frame.buffer_mut());
+    // TODO: needs some padding and stuff
+    let sub_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
+        .split(chunk);
+
+    // status, left section
+    // TODO: change color based on number, status
+    let status_text = Text::from(vec![
+        Line::from(vec![
+            "LEAPS SINCE INCIDENT: ".into(),
+            app.leaps_since_incident.to_string().into(),
+        ]),
+        Line::from(vec!["Fuel: ".into(), app.fuel.to_string().into()]),
+        Line::from(vec!["Parts: ".into(), app.parts.to_string().into()]),
+        Line::from(vec![
+            "Hull Damage: ".into(),
+            app.hull_damage.to_string().into(),
+        ]),
+        Line::from(vec![
+            "Engines: ".into(),
+            format!("{}", app.engine.status).into(),
+        ]),
+        Line::from(vec![
+            "Mining Laser: ".into(),
+            format!("{}", app.mining_laser.status).into(),
+        ]),
+        Line::from(vec![
+            "Scout Bay: ".into(),
+            format!("{}", app.scout_bay.status).into(),
+        ]),
+        Line::from(vec![
+            "Sick Bay: ".into(),
+            format!("{}", app.sick_bay.status).into(),
+        ]),
+        Line::from(vec![
+            "Sensors: ".into(),
+            format!("{}", app.sensors.status).into(),
+        ]),
+        Line::from(vec![app.game_text.as_str().into()]),
+    ]);
+    let main_thing = Paragraph::new(status_text);
+    frame.render_widget(main_thing, sub_chunks[0]);
+
+    // sub system list, right section
 }
 
 fn draw_main_log_tab(app: &mut App) {
@@ -342,6 +356,7 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
 
 /// renders the main block for Combat tab - different depending on in combat or not
 fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // TODO: keep main_block, add padding for inner tables and stuff
     if app.in_combat && app.combat.is_some() {
         let mut combat = app.combat.clone().unwrap();
 
