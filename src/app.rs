@@ -3,6 +3,7 @@ use crate::{
         combat::{enemy_damage, enemy_turn, mining_laser, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{Pilot, PilotStatus},
+        scout::scout_repair,
         ship::{Scout, ShipDamage, SubSystem},
         threat::{threats_to_fighters, Threats},
         Leap,
@@ -158,6 +159,7 @@ impl App {
                 KeyCode::Char('s') => s_key_press(self),
                 KeyCode::Char('a') => a_key_press(self),
                 KeyCode::Char('m') => m_key_press(self),
+                KeyCode::Char('r') => r_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
                 KeyCode::Left => left_press(self),
@@ -429,6 +431,27 @@ fn m_key_press(app: &mut App) {
             combat.combat_text = "Mining laser available starting in round 2.  Make sure a valid target is selected.".to_string();
         }
         app.combat = Some(combat);
+    }
+}
+
+/// logic for r key presses
+/// results depend on tab and selection - only available in step 6
+/// repairs scout damage, consuming parts (50% damage is repaired for free!)
+/// repairs sub systems when selected
+fn r_key_press(app: &mut App) {
+    if app.jump_step == JumpStep::Step6 {
+        match app.active_tab {
+            MenuTabs::Hangar => {
+                if app.hanger_state.selected().is_some() {
+                    scout_repair(app, app.hanger_state.selected().unwrap())
+                }
+                // TODO: notification to select a damaged scout
+            }
+            MenuTabs::Status => {
+                // TODO: repair selection after adding sub system table
+            }
+            _ => {}
+        }
     }
 }
 

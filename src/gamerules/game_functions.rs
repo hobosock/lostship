@@ -13,7 +13,7 @@ use crate::app::App;
 use super::{roll, threat::Threats, ScanResult};
 
 /// enum for tracking which step of the jump the player is in
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum JumpStep {
     Step1,
     Step2,
