@@ -370,7 +370,8 @@ fn draw_main_help_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
 
 /// renders the main block for Combat tab - different depending on in combat or not
 fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
-    // TODO: keep main_block, add padding for inner tables and stuff
+    let inner_area = main_block.inner(chunk);
+    main_block.render(chunk, frame.buffer_mut());
     if app.in_combat && app.combat.is_some() {
         let mut combat = app.combat.clone().unwrap();
 
@@ -427,7 +428,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
                 Constraint::Min(3),
                 Constraint::Length(3),
             ])
-            .split(chunk);
+            .split(inner_area);
         let ship_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
@@ -524,8 +525,8 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         app.combat = Some(combat);
     } else {
         // TODO: somehow wipe combat tab after it's resolved?
-        let paragraph = Paragraph::new("Not in combat at the moment - whew!").block(main_block);
-        frame.render_widget(paragraph, chunk);
+        let paragraph = Paragraph::new("Not in combat at the moment - whew!");
+        frame.render_widget(paragraph, inner_area);
     }
 }
 
