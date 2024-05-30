@@ -250,6 +250,10 @@ fn up_press(app: &mut App) {
                 }
             }
         }
+        MenuTabs::Status => {
+            app.subsys_list_state
+                .select(select_up(app.subsys_list_state.selected(), 6));
+        }
         _ => {}
     }
 }
@@ -278,6 +282,10 @@ fn down_press(app: &mut App) {
                     ));
                 }
             }
+        }
+        MenuTabs::Status => {
+            app.subsys_list_state
+                .select(select_down(app.subsys_list_state.selected(), 6));
         }
         _ => {}
     }

@@ -9,7 +9,7 @@ use ratatui::{
     symbols::border,
     widgets::{
         block::{Block, Position, Title},
-        {Borders, Cell, Paragraph, Row, Table, Tabs, Wrap},
+        Borders, Cell, List, Paragraph, Row, Table, Tabs, Wrap,
     },
 };
 use std::io::{self, stdout, Stdout};
@@ -185,12 +185,13 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
 /// draws center chunk of Status tab
 fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    let inner_area = main_block.inner(chunk);
     main_block.render(chunk, frame.buffer_mut());
     // TODO: needs some padding and stuff
     let sub_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
-        .split(chunk);
+        .split(inner_area);
 
     // status, left section
     // TODO: change color based on number, status
@@ -231,6 +232,19 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
     frame.render_widget(main_thing, sub_chunks[0]);
 
     // sub system list, right section
+    let list_items = [
+        "Hull",
+        "Engines",
+        "Mining Laser",
+        "Scout Bay",
+        "Sick Bay",
+        "Sensors",
+    ];
+    let list = List::new(list_items)
+        .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
+        .highlight_symbol(">>")
+        .repeat_highlight_symbol(true);
+    frame.render_stateful_widget(list, sub_chunks[1], &mut app.subsys_list_state);
 }
 
 fn draw_main_log_tab(app: &mut App) {
