@@ -456,12 +456,14 @@ fn r_key_press(app: &mut App) {
         match app.active_tab {
             MenuTabs::Hangar => {
                 if app.hanger_state.selected().is_some() {
-                    scout_repair(app, app.hanger_state.selected().unwrap())
+                    scout_repair(app, app.hanger_state.selected().unwrap());
                 }
                 // TODO: notification to select a damaged scout
             }
             MenuTabs::Status => {
-                // TODO: repair selection after adding sub system table
+                if app.subsys_list_state.selected().is_some() {
+                    subsystem_repair(app, app.subsys_list_state.selected().unwrap());
+                }
             }
             _ => {}
         }

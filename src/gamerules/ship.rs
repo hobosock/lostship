@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::app::App;
+
 use super::pilot::Pilot;
 
 /// SubSystem status (100/66/33/0%)
@@ -75,4 +77,22 @@ pub struct Scout {
     pub position: u64,
     pub ship: Ship,
     pub pilot: Pilot,
+}
+
+/// repairs selected subsystem by one level
+pub fn subsystem_repair(app: &mut App, subsystem: usize) {
+    if app.parts >= 2 && subsystem > 0 {
+        // TODO: check if subsystem is actually damaged first
+        app.parts -= 2;
+        app.game_text = "Subsystem fully repaired with 2 parts.".to_string();
+        if subsystem == 0 {
+            //
+        }
+    } else if app.parts >= 1 && subsystem == 0 && app.hull_damage > 0 {
+        app.parts -= 1;
+        app.hull_damage -= 1;
+        app.game_text = "Hull damage repaired with 1 part.".to_string();
+    } else {
+        app.game_text = "Not enough parts to make this repair!".to_string();
+    }
 }
