@@ -4,7 +4,7 @@ use crate::{
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{Pilot, PilotStatus},
         scout::scout_repair,
-        ship::{Scout, ShipDamage, SubSystem},
+        ship::{subsystem_repair, Scout, ShipDamage, SubSystem},
         threat::{threats_to_fighters, Threats},
         Leap,
     },
@@ -511,7 +511,7 @@ fn n_key_press(app: &mut App) {
                     app.jump_step = JumpStep::Step3;
                 }
                 JumpStep::Step3 => {
-                    // TODO: just create a battle for combat testing for now
+                    /*
                     app.combat = Some(Combat {
                         rounds: 1,
                         scout_formation: app.scouts.to_vec(),
@@ -524,6 +524,8 @@ fn n_key_press(app: &mut App) {
                         combat_text: "Enemy ships sighted!  Prepare to engage!".to_string(),
                     });
                     app.in_combat = true;
+                    */
+                    app.jump_step = JumpStep::Step4;
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof

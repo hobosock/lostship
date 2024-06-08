@@ -106,6 +106,14 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     match app.active_tab {
         MenuTabs::Status => {
             draw_main_status_tab(app, frame, chunks[1], main_block);
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<Up>/<Down>".yellow().bold(),
+                " Change selection. ".into(),
+                "<R>".yellow().bold(),
+                " Repair ".into(),
+            ])]);
         }
         MenuTabs::Log => {}
         MenuTabs::Hangar => {
@@ -119,6 +127,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Edit ".into(),
                 "<W>/<S>".yellow().bold(),
                 " Shift Assignment ".into(),
+                "<R>".yellow().bold(),
+                " Repair ".into(),
             ])]);
         }
         MenuTabs::Crew => {

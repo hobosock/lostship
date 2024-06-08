@@ -5,7 +5,7 @@ use crate::app::App;
 use super::pilot::Pilot;
 
 /// SubSystem status (100/66/33/0%)
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub enum Status {
     #[default]
     Normal,
@@ -82,11 +82,22 @@ pub struct Scout {
 /// repairs selected subsystem by one level
 pub fn subsystem_repair(app: &mut App, subsystem: usize) {
     if app.parts >= 2 && subsystem > 0 {
-        // TODO: check if subsystem is actually damaged first
-        app.parts -= 2;
-        app.game_text = "Subsystem fully repaired with 2 parts.".to_string();
-        if subsystem == 0 {
-            //
+        let damage = if subsystem == 1 {
+            &mut app.engine.status
+        } else if subsystem == 2 {
+            &mut app.mining_laser.status
+        } else if subsystem == 3 {
+            &mut app.scout_bay.status
+        } else if subsystem == 4 {
+            &mut app.sick_bay.status
+        } else {
+            &mut app.sensors.status
+        };
+        if *damage != Status::Normal {
+            app.parts -= 2;
+            *damage = Status::Normal;
+            app.game_text = "Subsystem fully repaired with 2 parts.".to_string();
+            if subsystem == 0 {}
         }
     } else if app.parts >= 1 && subsystem == 0 && app.hull_damage > 0 {
         app.parts -= 1;
