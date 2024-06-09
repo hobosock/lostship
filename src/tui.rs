@@ -129,6 +129,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Shift Assignment ".into(),
                 "<R>".yellow().bold(),
                 " Repair ".into(),
+                "<U>".yellow().bold(),
+                " Upgrade ".into(),
             ])]);
         }
         MenuTabs::Crew => {

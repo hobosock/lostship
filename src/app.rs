@@ -165,6 +165,7 @@ impl App {
                 KeyCode::Char('a') => a_key_press(self),
                 KeyCode::Char('m') => m_key_press(self),
                 KeyCode::Char('r') => r_key_press(self),
+                KeyCode::Char('u') => u_key_press(self),
                 KeyCode::Up => up_press(self),
                 KeyCode::Down => down_press(self),
                 KeyCode::Left => left_press(self),
@@ -463,6 +464,36 @@ fn r_key_press(app: &mut App) {
             MenuTabs::Status => {
                 if app.subsys_list_state.selected().is_some() {
                     subsystem_repair(app, app.subsys_list_state.selected().unwrap());
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// logic for u key presses
+/// only active on Status tab, upgrades subsystem if not already upgraded and enough parts are
+/// available (only works in repair phase)
+fn u_key_press(app: &mut App) {
+    if app.jump_step == JumpStep::Step6 {
+        match app.active_tab {
+            MenuTabs::Status => {
+                if app.hanger_state.selected().is_some() && app.parts >= 4 {
+                    let ss = app.hanger_state.selected().unwrap();
+                    if ss == 0 {
+                        app.hull_upgrade = true;
+                    } else if ss == 1 {
+                        app.engine.upgrade = true;
+                    } else if ss == 2 {
+                        app.mining_laser.upgrade = true;
+                    } else if ss == 3 {
+                        app.scout_bay.upgrade = true;
+                    } else if ss == 4 {
+                        app.sick_bay.upgrade = true;
+                    } else {
+                        app.sensors.upgrade = true;
+                    }
+                    app.parts -= 4;
                 }
             }
             _ => {}
