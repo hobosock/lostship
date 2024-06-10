@@ -40,6 +40,7 @@ pub struct App {
     pub pilot_assignment: [usize; 6],
     pub in_combat: bool,
     pub combat: Option<Combat>,
+    pub bwreckage: bool,
     pub game_text: String,
     pub jump_step: JumpStep,
     pub hanger_state: TableState,
@@ -90,6 +91,7 @@ impl Default for App {
             pilot_assignment: [0, 1, 2, 3, 4, 5],
             in_combat: false,
             combat: None,
+            bwreckage: false,
             game_text: String::new(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
@@ -509,7 +511,7 @@ fn n_key_press(app: &mut App) {
         MenuTabs::Status => {
             match app.jump_step {
                 JumpStep::Step1 => {
-                    app.game_text += "Jumping into a new system ...";
+                    app.game_text = "Jumping into a new system ...".to_string();
                     leap_into_system(app);
                     app.jump_step = JumpStep::Step2;
                 }
@@ -520,11 +522,13 @@ fn n_key_press(app: &mut App) {
                         Some(ev) => {
                             app.game_text += "Enemy ships are preparing to engage!";
                             app.in_combat = true;
+                            app.bwreckage = true;
                             ev
                         }
                         None => {
                             app.game_text += "Sector clear.  Whew!";
                             app.in_combat = false;
+                            app.bwreckage = false;
                             vec![Threats::None]
                         }
                     };
@@ -556,14 +560,20 @@ fn n_key_press(app: &mut App) {
                     });
                     app.in_combat = true;
                     */
-                    app.jump_step = JumpStep::Step4;
+                    if !app.in_combat {
+                        app.jump_step = JumpStep::Step4;
+                    }
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
-                    let parts = search_wreckage(&app.combat.clone().unwrap().enemy_formation);
-                    app.parts += parts;
-                    app.game_text =
-                        format!("You search through the wreckage and recover {parts} parts.");
+                    if app.bwreckage {
+                        let parts = search_wreckage(&app.combat.clone().unwrap().enemy_formation);
+                        app.parts += parts;
+                        app.game_text =
+                            format!("You search through the wreckage and recover {parts} parts.");
+                    } else {
+                        app.game_text = "No wreckage to salvage.".to_string();
+                    }
                     app.jump_step = JumpStep::Step5;
                 }
                 JumpStep::Step5 => {
@@ -587,9 +597,11 @@ fn n_key_press(app: &mut App) {
                     // injured pilots heal according to sick bay - do this last
                     // inoperable sick bay means newly injured pilots die
                     // start training up new pilots
+                    app.game_text = "Heal and train new pilots.".to_string();
                     app.jump_step = JumpStep::Step7;
                 }
                 JumpStep::Step7 => {
+                    app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
                     app.jump_step = JumpStep::Step1;
                 }
             }

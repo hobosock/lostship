@@ -388,10 +388,10 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         let mut combat = app.combat.clone().unwrap();
 
         // check if combat is resolved
-        if combat.enemy_stats.iter().all(|x| x.hp == 0 && x.fuel == 0) {
-            app.combat = None;
+        if combat.enemy_stats.iter().all(|x| x.hp == 0 || x.fuel == 0) {
+            app.combat = None; // TODO: this breaks the "search the wreckage step"
             app.in_combat = false;
-            app.jump_step = JumpStep::Step4;
+            // app.jump_step = JumpStep::Step4; // TODO: delete?
         }
 
         // reset pilot information in case order changed
