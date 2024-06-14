@@ -198,7 +198,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     let inner_area = main_block.inner(chunk);
     main_block.render(chunk, frame.buffer_mut());
-    // TODO: needs some padding and stuff
     let sub_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
@@ -239,7 +238,7 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         ]),
         Line::from(vec![app.game_text.as_str().into()]),
     ]);
-    let main_thing = Paragraph::new(status_text);
+    let main_thing = Paragraph::new(status_text).wrap(Wrap { trim: true });
     frame.render_widget(main_thing, sub_chunks[0]);
 
     // sub system list, right section
@@ -482,21 +481,34 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
                 Rank::Veteran => format!("|V| {}", scout.pilot.name).blue(),
                 Rank::Ace => format!("|A| {}", scout.pilot.name).green(),
             };
+            let health_text = match scout.pilot.status {
+                PilotStatus::Normal => "Normal".green(),
+                PilotStatus::Injured => "Injured".yellow(),
+                PilotStatus::Kia => "KIA".red(),
+            };
             rows.push(Row::new(vec![
                 Cell::from(scout.position.to_string()),
                 Cell::from(scout.ship.name.clone()),
                 Cell::from(pilot_text),
+                Cell::from(health_text),
                 Cell::from(damage_text),
             ]));
         }
-        let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
-            .style(Style::default().cyan().bold())
-            .bottom_margin(1);
+        let header_row = Row::new(vec![
+            "Flight Position",
+            "Ship Name",
+            "Pilot",
+            "Health",
+            "Damage",
+        ])
+        .style(Style::default().cyan().bold())
+        .bottom_margin(1);
         let widths = [
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
         ];
         let scout_table = Table::new(rows, widths)
             .column_spacing(1)
