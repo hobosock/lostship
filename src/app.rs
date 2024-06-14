@@ -534,9 +534,9 @@ fn n_key_press(app: &mut App) {
                     };
                     app.combat = Some(Combat {
                         rounds: 1,
-                        scout_turns: vec![true; scout_vec.len()],
+                        scout_turns: vec![false; scout_vec.len()],
                         scout_formation: scout_vec,
-                        enemy_turns: vec![true; enemy_vec.len()],
+                        enemy_turns: vec![false; enemy_vec.len()],
                         enemy_stats: threats_to_fighters(&enemy_vec),
                         enemy_formation: enemy_vec,
                         scout_half: true,

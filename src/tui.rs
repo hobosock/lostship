@@ -18,7 +18,6 @@ use crate::{
     app::App,
     gamerules::{
         combat::combat_to_app,
-        game_functions::JumpStep,
         pilot::{PilotStatus, Rank},
         ship::ShipDamage,
     },
