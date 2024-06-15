@@ -1,6 +1,8 @@
 use core::fmt;
 
-#[derive(Debug, Clone, Default)]
+use super::threat::Threats;
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum PilotStatus {
     #[default]
     Normal,
@@ -15,7 +17,7 @@ impl fmt::Display for PilotStatus {
             PilotStatus::Injured => "Injured",
             PilotStatus::Kia => "KIA",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 
@@ -34,7 +36,7 @@ impl fmt::Display for Rank {
             Rank::Veteran => "Veteran",
             Rank::Ace => "Ace",
         };
-        write!(f, "{}", printable)
+        write!(f, "{printable}")
     }
 }
 
@@ -50,11 +52,29 @@ pub struct Pilot {
 impl Default for Pilot {
     fn default() -> Self {
         Pilot {
-            name: "Pilot".to_string(),
+            name: "Pilot".to_string(), // TODO: replace with name generation function
             kills: 0,
             rank: Rank::default(),
             status: PilotStatus::default(),
             injury_timer: 0,
+        }
+    }
+}
+
+impl Pilot {
+    pub fn mark_kill(&mut self, enemy: &Threats) {
+        match enemy {
+            Threats::Mk1 => self.kills += 1,
+            Threats::Mk2 => self.kills += 2,
+            Threats::Mk3 => self.kills += 3,
+            Threats::None => {}
+        }
+    }
+    pub fn rank_up(&mut self) {
+        if self.kills >= 6 {
+            self.rank = Rank::Ace;
+        } else if self.kills >= 3 {
+            self.rank = Rank::Veteran;
         }
     }
 }

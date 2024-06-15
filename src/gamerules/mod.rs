@@ -1,8 +1,11 @@
 pub mod combat;
 pub mod game_functions;
 pub mod pilot;
+pub mod scout;
 pub mod ship;
 pub mod threat;
+
+use core::fmt;
 
 use rand::Rng;
 
@@ -12,6 +15,18 @@ pub enum ScanResult {
     Fuel,
     Anomoly,
     Home,
+}
+
+impl fmt::Display for ScanResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let printable = match *self {
+            ScanResult::Barren => "Barren",
+            ScanResult::Fuel => "Fuel",
+            ScanResult::Anomoly => "Anomoly",
+            ScanResult::Home => "Home",
+        };
+        write!(f, "{}", printable)
+    }
 }
 
 #[derive(Debug, Default)]
