@@ -8,7 +8,7 @@ use crate::{
         threat::{threats_to_fighters, Threats},
         Leap,
     },
-    tui::{select_down, select_up, ui, MenuTabs, Tui},
+    tui::interface_core::{select_down, select_up, ui, MenuTabs, Tui},
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{

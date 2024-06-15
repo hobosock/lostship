@@ -6,11 +6,12 @@ mod app;
 mod gamerules;
 mod resources;
 mod tui;
+use crate::tui::interface_core::{init, restore};
 use app::App;
 
 fn main() -> io::Result<()> {
-    let mut terminal = tui::init()?;
+    let mut terminal = init()?;
     let app_result = App::default().run(&mut terminal);
-    tui::restore()?;
+    restore()?;
     app_result
 }
