@@ -417,11 +417,16 @@ fn a_key_press(app: &mut App) {
             let damage = scout_attack(&scout);
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
             // check for kill and mark if appropriate
+            // TODO: clean this up
             if combat.enemy_stats[enemy_pos].hp == 0 {
                 app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
                 app.scouts[scout_pos].pilot.rank_up();
                 app.pilots[scout_pos].mark_kill(&enemy.model);
                 app.pilots[scout_pos].rank_up();
+                combat.scout_formation[scout_pos]
+                    .pilot
+                    .mark_kill(&enemy.model);
+                combat.scout_formation[scout_pos].pilot.rank_up();
                 // NOTE: This is because pilot information and order is copied into scout struct at
                 // certain points (like when drawing combat tab).  Probably shouldn't do that, come
                 // back to this when you've found a better way.
