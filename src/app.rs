@@ -466,6 +466,9 @@ fn m_key_press(app: &mut App) {
                     Threats::Mk3 => app.laser_kills += 3,
                     Threats::None => {}
                 }
+                if app.laser_kills >= 5 {
+                    app.mining_laser.upgrade = true;
+                }
             }
             combat.laser_fired = true;
             combat.combat_text = format!("Mining laser deals {} damage to {}", damage, enemy.model);

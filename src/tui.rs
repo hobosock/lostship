@@ -223,6 +223,7 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         Line::from(vec![
             "Mining Laser: ".into(),
             format!("{}", app.mining_laser.status).into(),
+            format!(" ({} kills)", app.laser_kills).into(),
         ]),
         Line::from(vec![
             "Scout Bay: ".into(),
