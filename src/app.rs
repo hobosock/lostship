@@ -28,7 +28,7 @@ pub struct App {
     pub parts: u64,
     pub hull_damage: u64,
     pub hull_upgrade: bool,
-    pub hull_destroyed: bool,
+    pub hull_destroyed: bool, // TODO: check for critical damage and end game
     pub engine: SubSystem,
     pub mining_laser: SubSystem,
     pub scout_bay: SubSystem,
@@ -38,6 +38,7 @@ pub struct App {
     pub log: Vec<Leap>,
     pub pilots: [Pilot; 6],
     pub pilot_assignment: [usize; 6],
+    pub laser_kills: u64,
     pub in_combat: bool,
     pub combat: Option<Combat>,
     pub bwreckage: bool,
@@ -89,6 +90,7 @@ impl Default for App {
                 Pilot::default(),
             ],
             pilot_assignment: [0, 1, 2, 3, 4, 5],
+            laser_kills: 0,
             in_combat: false,
             combat: None,
             bwreckage: false,
@@ -390,6 +392,7 @@ fn s_key_press(app: &mut App) {
 
 /// logic for a key presses
 /// if in combat AND scout turn AND selected valid scout AND enemy, roll for damage
+/// also handles upgrading rank if pilot scores a kill
 fn a_key_press(app: &mut App) {
     if app.combat.is_some()
         && app.combat.as_ref().unwrap().scout_half
@@ -413,6 +416,16 @@ fn a_key_press(app: &mut App) {
         if ship_ok && pilot_ok && target_ok && !turn_ok {
             let damage = scout_attack(&scout);
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+            // check for kill and mark if appropriate
+            if combat.enemy_stats[enemy_pos].hp == 0 {
+                app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
+                app.scouts[scout_pos].pilot.rank_up();
+                app.pilots[scout_pos].mark_kill(&enemy.model);
+                app.pilots[scout_pos].rank_up();
+                // NOTE: This is because pilot information and order is copied into scout struct at
+                // certain points (like when drawing combat tab).  Probably shouldn't do that, come
+                // back to this when you've found a better way.
+            }
             combat.scout_turns[scout_pos] = true;
             combat.combat_text = format!(
                 "{} deals {} damage to {}",
@@ -441,6 +454,14 @@ fn m_key_press(app: &mut App) {
         if target_ok && combat.rounds > 1 {
             let damage = mining_laser(app.mining_laser.upgrade);
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+            if combat.enemy_stats[enemy_pos].hp == 0 {
+                match combat.enemy_stats[enemy_pos].model {
+                    Threats::Mk1 => app.laser_kills += 1,
+                    Threats::Mk2 => app.laser_kills += 2,
+                    Threats::Mk3 => app.laser_kills += 3,
+                    Threats::None => {}
+                }
+            }
             combat.laser_fired = true;
             combat.combat_text = format!("Mining laser deals {} damage to {}", damage, enemy.model);
         } else {
