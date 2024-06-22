@@ -13,7 +13,7 @@ use crate::{
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     prelude::*,
-    widgets::{ListState, TableState},
+    widgets::{ListState, ScrollbarState, TableState},
 };
 use std::io;
 
@@ -54,6 +54,8 @@ pub struct App {
     pub combat_scout_state: TableState,
     pub combat_enemy_state: TableState,
     pub subsys_list_state: ListState,
+    pub log_scroll_state: ScrollbarState,
+    pub log_scroll: usize,
 }
 
 impl Default for App {
@@ -107,6 +109,8 @@ impl Default for App {
             combat_scout_state: TableState::default(),
             combat_enemy_state: TableState::default(),
             subsys_list_state: ListState::default(),
+            log_scroll_state: ScrollbarState::default(),
+            log_scroll: 0,
         }
     }
 }
@@ -236,6 +240,10 @@ fn enter_press(app: &mut App) {
 /// adjusts table selection up with wrapping on Hangar/Crew/Combat tabs
 fn up_press(app: &mut App) {
     match app.active_tab {
+        MenuTabs::Log => {
+            let _ = app.log_scroll.saturating_add(1); // TODO: maybe use your select_up function
+            app.log_scroll_state = app.log_scroll_state.position(app.log_scroll);
+        }
         MenuTabs::Hangar => app
             .hanger_state
             .select(select_up(app.hanger_state.selected(), app.scouts.len())),
@@ -269,6 +277,10 @@ fn up_press(app: &mut App) {
 /// adjusts table selection down with wrapping on Hangar/Crew/Combat tabs
 fn down_press(app: &mut App) {
     match app.active_tab {
+        MenuTabs::Log => {
+            let _ = app.log_scroll.saturating_sub(1);
+            app.log_scroll_state = app.log_scroll_state.position(app.log_scroll);
+        }
         MenuTabs::Hangar => app
             .hanger_state
             .select(select_down(app.hanger_state.selected(), app.scouts.len())),
@@ -549,6 +561,7 @@ fn n_key_press(app: &mut App) {
             match app.jump_step {
                 JumpStep::Step1 => {
                     app.current_leap = Leap::default(); // reset current leap log
+                    app.current_leap.number = app.leaps_since_incident;
                     app.game_text = "Jumping into a new system ...".to_string();
                     leap_into_system(app);
                     app.jump_step = JumpStep::Step2;

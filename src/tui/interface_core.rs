@@ -9,7 +9,7 @@ use ratatui::{
     symbols::border,
     widgets::{
         block::{Block, Position, Title},
-        Borders, Cell, List, Paragraph, Row, Table, Tabs, Wrap,
+        Borders, Cell, List, Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs, Wrap,
     },
 };
 use std::io::{self, stdout, Stdout};
@@ -116,7 +116,15 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Repair ".into(),
             ])]);
         }
-        MenuTabs::Log => {}
+        MenuTabs::Log => {
+            draw_main_log_tab(app, frame, chunks[1], main_block);
+            instructions_text = Text::from(vec![Line::from(vec![
+                "<Q>".yellow().bold(),
+                " Quit ".into(),
+                "<Up>/<Down>".yellow().bold(),
+                " Scroll. ".into(),
+            ])]);
+        }
         MenuTabs::Hangar => {
             draw_main_hangar_tab(app, frame, chunks[1], main_block);
             instructions_text = Text::from(vec![Line::from(vec![
@@ -251,8 +259,22 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
     frame.render_stateful_widget(list, sub_chunks[1], &mut app.subsys_list_state);
 }
 
-fn draw_main_log_tab(app: &mut App) {
-    // table with a row for each leap?
+fn draw_main_log_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    let inner_area = main_block.inner(chunk);
+    main_block.render(chunk, frame.buffer_mut());
+    // iterate over log and turn each element into a Paragraph
+    let mut scroll_content: Vec<Paragraph> = Vec::new();
+    for entry in app.log.iter() {
+        scroll_content.push(entry.to_paragraph());
+    }
+    let _ = app.log_scroll_state.content_length(scroll_content.len());
+    frame.render_stateful_widget(
+        Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("^"))
+            .end_symbol(Some("v")),
+        inner_area,
+        &mut app.log_scroll_state,
+    );
 }
 
 fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
