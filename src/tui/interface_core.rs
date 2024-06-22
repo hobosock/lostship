@@ -408,6 +408,7 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
             combat.laser_fired = false;
             // end of round, +/- fuel, round counter, etc.
             combat.rounds += 1;
+            app.current_leap.combat_rounds += 1; // update log
             for (i, enemy) in app.combat.as_ref().unwrap().enemy_stats.iter().enumerate() {
                 if enemy.fuel > 0 {
                     combat.enemy_stats[i].fuel -= 1;
