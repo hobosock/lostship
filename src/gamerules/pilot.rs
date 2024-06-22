@@ -73,7 +73,7 @@ impl Pilot {
     pub fn rank_up(&mut self) {
         if self.kills >= 6 {
             self.rank = Rank::Ace;
-        } else if self.kills >= 3 {
+        } else if self.kills >= 3 && self.kills < 6 {
             self.rank = Rank::Veteran;
         }
     }

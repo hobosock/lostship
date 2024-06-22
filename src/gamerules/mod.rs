@@ -8,6 +8,7 @@ pub mod threat;
 use core::fmt;
 
 use rand::Rng;
+use threat::Threats;
 
 #[derive(Debug, Clone)]
 pub enum ScanResult {
@@ -29,11 +30,25 @@ impl fmt::Display for ScanResult {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone)]
 pub struct Leap {
-    combat_rounds: u64,
-    parts_found: u64,
-    fuel_found: u64,
+    pub combat_rounds: u64,
+    pub parts_found: u64,
+    pub fuel_found: u64,
+    pub threats: Vec<Threats>,
+    pub damage: Vec<u64>,
+}
+
+impl Default for Leap {
+    fn default() -> Self {
+        Leap {
+            combat_rounds: 0,
+            parts_found: 0,
+            fuel_found: 0,
+            threats: vec![Threats::None],
+            damage: vec![0],
+        }
+    }
 }
 
 pub fn roll(side: i64) -> i64 {

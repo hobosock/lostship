@@ -8,7 +8,7 @@ use crate::{
         threat::{threats_to_fighters, Threats},
         Leap,
     },
-    tui::{select_down, select_up, ui, MenuTabs, Tui},
+    tui::interface_core::{select_down, select_up, ui, MenuTabs, Tui},
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
@@ -35,6 +35,7 @@ pub struct App {
     pub sick_bay: SubSystem,
     pub sensors: SubSystem,
     pub scouts: [Scout; 6],
+    pub current_leap: Leap,
     pub log: Vec<Leap>,
     pub pilots: [Pilot; 6],
     pub pilot_assignment: [usize; 6],
@@ -80,7 +81,8 @@ impl Default for App {
                 Scout::default(),
                 Scout::default(),
             ],
-            log: vec![Leap::default()],
+            current_leap: Leap::default(),
+            log: Vec::new(),
             pilots: [
                 Pilot::default(),
                 Pilot::default(),
@@ -415,6 +417,9 @@ fn a_key_press(app: &mut App) {
 
         if ship_ok && pilot_ok && target_ok && !turn_ok {
             let damage = scout_attack(&scout);
+            // update combat log
+            app.current_leap.damage[enemy_pos] += damage;
+            // apply damage
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
             // check for kill and mark if appropriate
             // TODO: clean this up
@@ -458,6 +463,9 @@ fn m_key_press(app: &mut App) {
         let target_ok = enemy.fuel > 0 && enemy.hp > 0;
         if target_ok && combat.rounds > 1 {
             let damage = mining_laser(app.mining_laser.upgrade);
+            // update leap log
+            app.current_leap.damage[enemy_pos] += damage;
+            // apply damage
             combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
             if combat.enemy_stats[enemy_pos].hp == 0 {
                 match combat.enemy_stats[enemy_pos].model {
@@ -540,6 +548,7 @@ fn n_key_press(app: &mut App) {
         MenuTabs::Status => {
             match app.jump_step {
                 JumpStep::Step1 => {
+                    app.current_leap = Leap::default(); // reset current leap log
                     app.game_text = "Jumping into a new system ...".to_string();
                     leap_into_system(app);
                     app.jump_step = JumpStep::Step2;
@@ -561,6 +570,9 @@ fn n_key_press(app: &mut App) {
                             vec![Threats::None]
                         }
                     };
+                    // update log with threat info
+                    app.current_leap.threats = enemy_vec.clone();
+                    app.current_leap.damage = vec![0; enemy_vec.len()];
                     app.combat = Some(Combat {
                         rounds: 1,
                         scout_turns: vec![false; scout_vec.len()],
@@ -598,6 +610,7 @@ fn n_key_press(app: &mut App) {
                     if app.bwreckage {
                         let parts = search_wreckage(&app.combat.clone().unwrap().enemy_formation);
                         app.parts += parts;
+                        app.current_leap.parts_found = parts; // update log
                         app.game_text =
                             format!("You search through the wreckage and recover {parts} parts.");
                     } else {
@@ -608,6 +621,7 @@ fn n_key_press(app: &mut App) {
                 JumpStep::Step5 => {
                     let (fuel, scan_result) = system_scan(app.leaps_since_incident);
                     app.fuel += fuel;
+                    app.current_leap.fuel_found = fuel; // update log
                     app.game_text = format!(
                         "Scanning system... {scan_result} - gathered {fuel} fuel.  Make repairs and upkeep."
                     );
@@ -627,6 +641,7 @@ fn n_key_press(app: &mut App) {
                     // inoperable sick bay means newly injured pilots die
                     // start training up new pilots
                     app.game_text = "Heal and train new pilots.".to_string();
+                    app.log.push(app.current_leap.clone());
                     app.jump_step = JumpStep::Step7;
                 }
                 JumpStep::Step7 => {
