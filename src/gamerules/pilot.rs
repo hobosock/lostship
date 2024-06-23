@@ -1,6 +1,9 @@
 use core::fmt;
 
-use super::threat::Threats;
+use super::{
+    ship::{Status, SubSystem},
+    threat::Threats,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum PilotStatus {
@@ -62,6 +65,7 @@ impl Default for Pilot {
 }
 
 impl Pilot {
+    /// increases pilot kill count based on enemy ship type
     pub fn mark_kill(&mut self, enemy: &Threats) {
         match enemy {
             Threats::Mk1 => self.kills += 1,
@@ -70,11 +74,55 @@ impl Pilot {
             Threats::None => {}
         }
     }
+    /// increases pilot rank if it has the requisite number of kills
     pub fn rank_up(&mut self) {
         if self.kills >= 6 {
             self.rank = Rank::Ace;
         } else if self.kills >= 3 && self.kills < 6 {
             self.rank = Rank::Veteran;
+        }
+    }
+    /// improves pilot's status based on Sick Bay condition
+    /// ticks up injury timer until healed, then resets to 0
+    pub fn heal(&mut self, sick_bay: &SubSystem) {
+        // if sick bay is upgraded, injured pilots are healed at the end of battle
+        // 100% - 1 leap
+        // 66% - 2 leaps
+        // 33% - 3 leaps
+        // Inoperable - newly injured pilots die
+        if self.status == PilotStatus::Injured {
+            match sick_bay.status {
+                Status::Normal => {
+                    if sick_bay.upgrade {
+                        self.status = PilotStatus::Normal;
+                        self.injury_timer = 0;
+                        return;
+                    } else if self.injury_timer > 0 {
+                        self.status = PilotStatus::Normal;
+                        self.injury_timer = 0;
+                        return;
+                    }
+                }
+                Status::Serviceable => {
+                    if self.injury_timer > 1 {
+                        self.status = PilotStatus::Normal;
+                        self.injury_timer = 0;
+                        return;
+                    }
+                }
+                Status::BarelyFunctioning => {
+                    if self.injury_timer > 2 {
+                        self.status = PilotStatus::Normal;
+                        self.injury_timer = 0;
+                        return;
+                    }
+                }
+                Status::Inoperable => {
+                    self.status = PilotStatus::Kia;
+                    return;
+                }
+            }
+            self.injury_timer += 1; // tick up if not healed
         }
     }
 }

@@ -656,6 +656,10 @@ fn n_key_press(app: &mut App) {
                     app.game_text = "Heal and train new pilots.".to_string();
                     app.log.push(app.current_leap.clone());
                     app.jump_step = JumpStep::Step7;
+                    // heal pilots
+                    for pilot in &mut app.pilots {
+                        pilot.heal(&app.sick_bay);
+                    }
                 }
                 JumpStep::Step7 => {
                     app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
