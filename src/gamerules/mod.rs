@@ -8,6 +8,7 @@ pub mod threat;
 use core::fmt;
 
 use rand::Rng;
+use ratatui::{style::Stylize, text::Line};
 use threat::Threats;
 
 #[derive(Debug, Clone)]
@@ -32,6 +33,7 @@ impl fmt::Display for ScanResult {
 
 #[derive(Debug, Clone)]
 pub struct Leap {
+    pub number: u64,
     pub combat_rounds: u64,
     pub parts_found: u64,
     pub fuel_found: u64,
@@ -42,12 +44,26 @@ pub struct Leap {
 impl Default for Leap {
     fn default() -> Self {
         Leap {
+            number: 1,
             combat_rounds: 0,
             parts_found: 0,
             fuel_found: 0,
             threats: vec![Threats::None],
             damage: vec![0],
         }
+    }
+}
+
+impl Leap {
+    pub fn to_lines(self: &Self) -> Vec<Line> {
+        vec![
+            Line::from(format!("LEAP: {}", self.number)).bold().cyan(),
+            format!("Combat Rounds: {}", self.combat_rounds).into(),
+            format!("Parts Found: {}", self.parts_found).into(),
+            format!("Fuel Found: {}", self.fuel_found).into(),
+            format!("Threats: {:?}", self.threats).into(),
+            format!("Damage: {:?}", self.damage).into(),
+        ]
     }
 }
 
