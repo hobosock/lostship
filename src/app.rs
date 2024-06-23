@@ -39,6 +39,8 @@ pub struct App {
     pub log: Vec<Leap>,
     pub pilots: [Pilot; 6],
     pub pilot_assignment: [usize; 6],
+    pub new_pilots: Vec<u64>,
+    pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
     pub in_combat: bool,
     pub combat: Option<Combat>,
@@ -94,6 +96,8 @@ impl Default for App {
                 Pilot::default(),
             ],
             pilot_assignment: [0, 1, 2, 3, 4, 5],
+            new_pilots: Vec::new(),
+            honor_roll: Vec::new(),
             laser_kills: 0,
             in_combat: false,
             combat: None,
@@ -617,6 +621,15 @@ fn n_key_press(app: &mut App) {
                     if !app.in_combat {
                         app.jump_step = JumpStep::Step4;
                     }
+                    // check for KIA pilots, handle training new ones
+                    for trainee in app.new_pilots.iter_mut() {
+                        *trainee += 1;
+                    }
+                    for pilot in app.pilots.iter() {
+                        if pilot.status == PilotStatus::Kia {
+                            app.new_pilots.push(0);
+                        }
+                    }
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
@@ -660,6 +673,13 @@ fn n_key_press(app: &mut App) {
                     for pilot in &mut app.pilots {
                         pilot.heal(&app.sick_bay);
                     }
+                    // "bury" pilots
+                    for pilot in app.pilots.iter() {
+                        if pilot.status == PilotStatus::Kia {
+                            app.honor_roll.push(pilot.clone());
+                        }
+                    }
+                    // TODO: need to remove from pilot array, need to rework to Vec
                 }
                 JumpStep::Step7 => {
                     app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
