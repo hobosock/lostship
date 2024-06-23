@@ -8,10 +8,7 @@ pub mod threat;
 use core::fmt;
 
 use rand::Rng;
-use ratatui::{
-    text::Text,
-    widgets::{Block, Paragraph},
-};
+use ratatui::{style::Stylize, text::Line};
 use threat::Threats;
 
 #[derive(Debug, Clone)]
@@ -58,16 +55,15 @@ impl Default for Leap {
 }
 
 impl Leap {
-    pub fn to_paragraph(self: &Self) -> Paragraph {
-        let log_text = Text::from(vec![
-            format!("LEAP: {}", self.number).into(),
+    pub fn to_lines(self: &Self) -> Vec<Line> {
+        vec![
+            Line::from(format!("LEAP: {}", self.number)).bold().cyan(),
             format!("Combat Rounds: {}", self.combat_rounds).into(),
             format!("Parts Found: {}", self.parts_found).into(),
             format!("Fuel Found: {}", self.fuel_found).into(),
             format!("Threats: {:?}", self.threats).into(),
             format!("Damage: {:?}", self.damage).into(),
-        ]);
-        Paragraph::new(log_text).block(Block::default())
+        ]
     }
 }
 

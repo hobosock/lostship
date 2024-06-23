@@ -263,11 +263,13 @@ fn draw_main_log_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: 
     let inner_area = main_block.inner(chunk);
     main_block.render(chunk, frame.buffer_mut());
     // iterate over log and turn each element into a Paragraph
-    let mut scroll_content: Vec<Paragraph> = Vec::new();
+    let mut scroll_content: Vec<Line> = Vec::new();
     for entry in app.log.iter() {
-        scroll_content.push(entry.to_paragraph());
+        scroll_content.append(&mut entry.to_lines());
     }
     let _ = app.log_scroll_state.content_length(scroll_content.len());
+    let scroll_paragraph = Paragraph::new(scroll_content);
+    frame.render_widget(scroll_paragraph, inner_area);
     frame.render_stateful_widget(
         Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(Some("^"))

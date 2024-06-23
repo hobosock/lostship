@@ -561,7 +561,7 @@ fn n_key_press(app: &mut App) {
             match app.jump_step {
                 JumpStep::Step1 => {
                     app.current_leap = Leap::default(); // reset current leap log
-                    app.current_leap.number = app.leaps_since_incident;
+                    app.current_leap.number = app.leaps_since_incident + 1;
                     app.game_text = "Jumping into a new system ...".to_string();
                     leap_into_system(app);
                     app.jump_step = JumpStep::Step2;
