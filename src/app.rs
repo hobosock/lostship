@@ -34,11 +34,11 @@ pub struct App {
     pub scout_bay: SubSystem,
     pub sick_bay: SubSystem,
     pub sensors: SubSystem,
-    pub scouts: [Scout; 6],
+    pub scouts: Vec<Scout>,
     pub current_leap: Leap,
     pub log: Vec<Leap>,
-    pub pilots: [Pilot; 6],
-    pub pilot_assignment: [usize; 6],
+    pub pilots: Vec<Pilot>,
+    pub pilot_assignment: Vec<usize>,
     pub new_pilots: Vec<u64>,
     pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
@@ -77,25 +77,11 @@ impl Default for App {
             scout_bay: SubSystem::default(),
             sick_bay: SubSystem::default(),
             sensors: SubSystem::default(),
-            scouts: [
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-            ],
+            scouts: vec![Scout::default(); 6],
             current_leap: Leap::default(),
             log: Vec::new(),
-            pilots: [
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-            ],
-            pilot_assignment: [0, 1, 2, 3, 4, 5],
+            pilots: vec![Pilot::default(); 6],
+            pilot_assignment: vec![0, 1, 2, 3, 4, 5],
             new_pilots: Vec::new(),
             honor_roll: Vec::new(),
             laser_kills: 0,
@@ -674,12 +660,34 @@ fn n_key_press(app: &mut App) {
                         pilot.heal(&app.sick_bay);
                     }
                     // "bury" pilots
-                    for pilot in app.pilots.iter() {
+                    let mut buried: Vec<usize> = Vec::new();
+                    // find KIA pilots and add to Roll of Honor
+                    for (i, pilot) in app.pilots.iter().enumerate() {
                         if pilot.status == PilotStatus::Kia {
                             app.honor_roll.push(pilot.clone());
+                            buried.push(i);
                         }
                     }
-                    // TODO: need to remove from pilot array, need to rework to Vec
+                    // remove from crew
+                    for i in buried.iter().rev() {
+                        app.pilots.remove(*i);
+                    }
+                    // train existing pilots
+                    app.new_pilots = app.new_pilots.clone().into_iter().map(|x| x + 1).collect();
+                    // make new one if training is complete
+                    let mut trained: Vec<usize> = Vec::new();
+                    for (i, trainee) in app.new_pilots.iter().enumerate() {
+                        if *trainee >= 2 {
+                            trained.push(i);
+                        }
+                    }
+                    for i in trained.iter().rev() {
+                        app.new_pilots.remove(*i);
+                    }
+                    // start training new pilots
+                    for _i in 0..buried.len() {
+                        app.new_pilots.push(0);
+                    }
                 }
                 JumpStep::Step7 => {
                     app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();

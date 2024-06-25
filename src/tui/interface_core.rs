@@ -335,6 +335,7 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
     let header_row = Row::new(vec!["Name", "Kills", "Rank", "Status", "Leaps Injured"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
+    // NOTE: couldn't figure out how to generate rows based on current length of app.pilots
     let mut rows = [
         Row::default(),
         Row::default(),
