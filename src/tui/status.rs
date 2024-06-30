@@ -44,7 +44,7 @@ pub fn get_hull_string(damage: u64, upgraded: bool) -> Span<'static> {
 pub fn get_subsys_string(subsystem: &SubSystem) -> Span<'static> {
     match subsystem.status {
         Status::Normal => "Normal".green(),
-        Status::Serviceable => "Serviceable".white(),
+        Status::Serviceable => "Serviceable".magenta(),
         Status::BarelyFunctioning => "Barely Functioning".yellow(),
         Status::Inoperable => "Inoperable".red(),
     }

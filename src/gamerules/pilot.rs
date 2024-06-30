@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::app::{self, App};
+
 use super::{
     ship::{Status, SubSystem},
     threat::Threats,
@@ -135,4 +137,14 @@ pub fn honor_roll_to_list(roll: &[Pilot]) -> Vec<String> {
         honor_list.push(format!("{} {}", pilot.name, pilot.kills));
     }
     honor_list
+}
+
+// TODO: use this in other places like fn a_key_press()
+/// copies pilot info from app.pilots into scout pilot information and scout formation pilot
+/// information
+/// there is probably a better way to do this, just hacking it together for now
+pub fn update_pilot_info(app: &mut App) {
+    for (i, pilot) in app.pilots.iter().enumerate() {
+        app.scouts[i].pilot = pilot.clone();
+    }
 }

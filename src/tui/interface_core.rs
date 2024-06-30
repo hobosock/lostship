@@ -402,7 +402,7 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
     // display new pilot training progress
     let mut training_text = String::new();
     for i in &app.new_pilots {
-        training_text.push_str(&format!("New Pilot - {} / 2 leaps trained", i));
+        training_text.push_str(&format!("| New Pilot - {} / 2 leaps trained ", i));
     }
     let training_paragraph = Paragraph::new(training_text);
     frame.render_widget(training_paragraph, vt_chunks[1]);
@@ -440,7 +440,9 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
         // reset pilot information in case order changed
         // TODO: maybe don't want to do this during a combat phase?
-        for i in 0..app.scouts.len() {
+        // TODO: probably use minimum of length of pilots and scouts
+        let launch_length = app.scouts.len().min(app.pilots.len());
+        for i in 0..launch_length {
             app.scouts[i].pilot = app.pilots[i].clone();
         }
 

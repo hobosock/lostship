@@ -2,7 +2,7 @@ use crate::{
     gamerules::{
         combat::{enemy_damage, enemy_turn, mining_laser, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
-        pilot::{Pilot, PilotStatus},
+        pilot::{update_pilot_info, Pilot, PilotStatus},
         scout::scout_repair,
         ship::{subsystem_repair, Scout, ShipDamage, SubSystem},
         threat::{threats_to_fighters, Threats},
@@ -558,7 +558,13 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step2 => {
                     app.game_text = "Assessing threats ...".to_string();
-                    let scout_vec = Vec::from(app.scouts.clone());
+                    let mut scout_vec = Vec::from(app.scouts.clone());
+                    if app.scouts.len() > app.pilots.len() {
+                        for _i in 0..(app.scouts.len() - app.pilots.len()) {
+                            scout_vec.pop();
+                        }
+                    }
+                    app.combat_enemy_state.select(Some(0)); // out of range
                     let enemy_vec = match assess_threat(app) {
                         Some(ev) => {
                             app.game_text += "Enemy ships are preparing to engage!";
@@ -607,6 +613,8 @@ fn n_key_press(app: &mut App) {
                     if !app.in_combat {
                         app.jump_step = JumpStep::Step4;
                     }
+                    // NOTE: handling this is Step 6, leaving commented in case I need to reference
+                    /*
                     // check for KIA pilots, handle training new ones
                     for trainee in app.new_pilots.iter_mut() {
                         *trainee += 1;
@@ -616,6 +624,7 @@ fn n_key_press(app: &mut App) {
                             app.new_pilots.push(0);
                         }
                     }
+                    */
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
@@ -641,17 +650,6 @@ fn n_key_press(app: &mut App) {
                     app.jump_step = JumpStep::Step6;
                 }
                 JumpStep::Step6 => {
-                    // scouts at 50% are repaired for free
-                    // inoperable scouts can be repaired for 1 part
-                    // each point of hull damage can be repaired for 1 part
-                    // a scout can be scrapped for +4 parts
-                    // repairing any system requires 2 parts
-                    // upgrading a system costs 4 parts
-                    // building a new scout costs 6 parts
-                    // after every 5th leap you get a free upgrade
-                    // injured pilots heal according to sick bay - do this last
-                    // inoperable sick bay means newly injured pilots die
-                    // start training up new pilots
                     app.game_text = "Heal and train new pilots.".to_string();
                     app.log.push(app.current_leap.clone());
                     app.jump_step = JumpStep::Step7;
@@ -671,6 +669,8 @@ fn n_key_press(app: &mut App) {
                     // remove from crew
                     for i in buried.iter().rev() {
                         app.pilots.remove(*i);
+                        // NOTE: need to adjust crew table selected index to avoid out of range errors
+                        app.crew_state.select(Some(0));
                     }
                     // train existing pilots
                     app.new_pilots = app.new_pilots.clone().into_iter().map(|x| x + 1).collect();
@@ -688,6 +688,7 @@ fn n_key_press(app: &mut App) {
                     for _i in 0..buried.len() {
                         app.new_pilots.push(0);
                     }
+                    update_pilot_info(app);
                 }
                 JumpStep::Step7 => {
                     app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
