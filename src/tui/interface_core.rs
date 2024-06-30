@@ -18,7 +18,7 @@ use crate::{
     app::App,
     gamerules::{
         combat::combat_to_app,
-        pilot::{PilotStatus, Rank},
+        pilot::{honor_roll_to_list, PilotStatus, Rank},
         ship::ShipDamage,
     },
     resources::{about::ABOUT_STR, help::HELP_STR},
@@ -332,6 +332,18 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
 /// renders the main block for the Crew tab
 fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // format center area of GUI
+    let inner_area = main_block.inner(chunk);
+    main_block.render(chunk, frame.buffer_mut());
+    let vt_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(3), Constraint::Length(3)])
+        .split(inner_area);
+    let ht_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)])
+        .split(vt_chunks[0]);
+    // create main table for managing crew
     let header_row = Row::new(vec!["Name", "Kills", "Rank", "Status", "Leaps Injured"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
@@ -375,10 +387,25 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .header(header_row)
-        .block(main_block)
         .highlight_style(Style::default().reversed())
         .highlight_symbol(">>");
-    frame.render_stateful_widget(table, chunk, &mut app.crew_state);
+    frame.render_stateful_widget(table, ht_chunks[0], &mut app.crew_state);
+    // draw roll of honor
+    let honor_block = Block::default()
+        .title("| Roll of Honor |")
+        .title_alignment(Alignment::Center)
+        .borders(Borders::ALL)
+        .border_style(Color::Magenta);
+    let honor_text = honor_roll_to_list(&app.honor_roll);
+    let honor_list = List::new(honor_text).block(honor_block);
+    frame.render_widget(honor_list, ht_chunks[1]);
+    // display new pilot training progress
+    let mut training_text = String::new();
+    for i in &app.new_pilots {
+        training_text.push_str(&format!("New Pilot - {} / 2 leaps trained", i));
+    }
+    let training_paragraph = Paragraph::new(training_text);
+    frame.render_widget(training_paragraph, vt_chunks[1]);
 }
 
 /// renders main block for About tab

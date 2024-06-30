@@ -126,3 +126,13 @@ impl Pilot {
         }
     }
 }
+
+/// create list item of Pilots in honor roll
+/// text has pilot name and number of kills
+pub fn honor_roll_to_list(roll: &[Pilot]) -> Vec<String> {
+    let mut honor_list: Vec<String> = Vec::new();
+    for pilot in roll.iter() {
+        honor_list.push(format!("{} {}", pilot.name, pilot.kills));
+    }
+    honor_list
+}
