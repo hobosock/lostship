@@ -704,16 +704,11 @@ fn n_key_press(app: &mut App) {
             } else if app.combat.is_some() && app.combat.as_ref().unwrap().scout_half {
                 // TODO: debug only, delete this branch
                 let mut combat = app.combat.clone().unwrap();
-                combat.combat_text = format!(
-                    "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
-                    combat.scout_turns[0],
-                    combat.scout_turns[1],
-                    combat.scout_turns[2],
-                    combat.scout_turns[3],
-                    combat.scout_turns[4],
-                    combat.scout_turns[5],
-                    combat.laser_fired,
-                );
+                let mut text = String::new();
+                for turn in combat.scout_turns.iter() {
+                    text += &format!("{:?} ", turn);
+                }
+                combat.combat_text = text;
                 app.combat = Some(combat);
             }
         }
