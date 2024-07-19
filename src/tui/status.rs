@@ -49,3 +49,9 @@ pub fn get_subsys_string(subsystem: &SubSystem) -> Span<'static> {
         Status::Inoperable => "Inoperable".red(),
     }
 }
+
+/// returns bool, true if hull is destroyed
+pub fn check_hull(damage: u64, upgraded: bool) -> bool {
+    let max = if upgraded { 7 } else { 6 };
+    damage >= max
+}

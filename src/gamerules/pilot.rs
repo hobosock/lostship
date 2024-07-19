@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::app::{self, App};
+use crate::app::App;
 
 use super::{
     ship::{Status, SubSystem},

@@ -8,7 +8,10 @@ use crate::{
         threat::{threats_to_fighters, Threats},
         Leap,
     },
-    tui::interface_core::{select_down, select_up, ui, MenuTabs, Tui},
+    tui::{
+        interface_core::{select_down, select_up, ui, MenuTabs, Tui},
+        status::check_hull,
+    },
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
@@ -625,6 +628,11 @@ fn n_key_press(app: &mut App) {
                         }
                     }
                     */
+                    // check for hull destroyed
+                    app.hull_destroyed = check_hull(app.hull_damage, app.hull_upgrade);
+                    if app.hull_destroyed {
+                        app.game_text += "Hull destroyed!  Game Over.";
+                    }
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
