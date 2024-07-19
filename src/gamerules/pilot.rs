@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::app::App;
+use crate::{app::App, resources::pilot_names::generate_pilot_name};
 
 use super::{
     ship::{Status, SubSystem},
@@ -67,6 +67,10 @@ impl Default for Pilot {
 }
 
 impl Pilot {
+    /// creates a new Pilot struct
+    pub fn new_name(&mut self, in_use: &mut Option<Vec<usize>>) {
+        self.name = generate_pilot_name(in_use);
+    }
     /// increases pilot kill count based on enemy ship type
     pub fn mark_kill(&mut self, enemy: &Threats) {
         match enemy {

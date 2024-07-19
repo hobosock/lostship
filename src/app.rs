@@ -42,6 +42,7 @@ pub struct App {
     pub log: Vec<Leap>,
     pub pilots: Vec<Pilot>,
     pub pilot_assignment: Vec<usize>,
+    pub pilot_in_use: Option<Vec<usize>>,
     pub new_pilots: Vec<u64>,
     pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
@@ -85,6 +86,7 @@ impl Default for App {
             log: Vec::new(),
             pilots: vec![Pilot::default(); 6],
             pilot_assignment: vec![0, 1, 2, 3, 4, 5],
+            pilot_in_use: None,
             new_pilots: Vec::new(),
             honor_roll: Vec::new(),
             laser_kills: 0,
@@ -111,6 +113,13 @@ impl Default for App {
 impl App {
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut Tui) -> io::Result<()> {
+        // name pilots on startup
+        // NOTE: this whole sequence is really stupid
+        let mut in_use = self.pilot_in_use.clone();
+        for pilot in self.pilots.iter_mut() {
+            pilot.new_name(&mut in_use);
+            self.pilot_in_use = in_use.clone();
+        }
         while !self.exit {
             terminal.draw(|frame| self.render_frame(frame))?;
             self.handle_events()?;
