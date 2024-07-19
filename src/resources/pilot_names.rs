@@ -19,7 +19,7 @@ pub fn generate_pilot_name(in_use: &mut Option<Vec<usize>>) -> String {
     if in_use.is_some() {
         while duplicate {
             match in_use.as_ref().unwrap().iter().find(|x| **x == idx) {
-                Some(_) => idx = roll(length) as usize,
+                Some(_) => idx = (roll(length) - 1) as usize,
                 None => duplicate = false,
             }
         }

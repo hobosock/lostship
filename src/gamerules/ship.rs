@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::app::App;
+use crate::{app::App, resources::scout_names::generate_scout_name};
 
 use super::pilot::Pilot;
 
@@ -68,6 +68,13 @@ impl Default for Ship {
             name: "Ship Name".to_string(),
             damage: ShipDamage::default(),
         }
+    }
+}
+
+impl Ship {
+    /// auto-generated name
+    pub fn new_name(&mut self, in_use: &mut Option<Vec<usize>>) {
+        self.name = generate_scout_name(in_use);
     }
 }
 

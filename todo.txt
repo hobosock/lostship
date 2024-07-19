@@ -3,3 +3,5 @@ Need some way to choose not to send out injured pilots
 enemies can destroy scouts after pilot is KIA (and vice versa)
 
 need to avoid assigning pilots to inoperable scouts
+
+sometimes upgrade subsystem button doesn't work

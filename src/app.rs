@@ -38,6 +38,7 @@ pub struct App {
     pub sick_bay: SubSystem,
     pub sensors: SubSystem,
     pub scouts: Vec<Scout>,
+    pub scouts_in_use: Option<Vec<usize>>,
     pub current_leap: Leap,
     pub log: Vec<Leap>,
     pub pilots: Vec<Pilot>,
@@ -82,6 +83,7 @@ impl Default for App {
             sick_bay: SubSystem::default(),
             sensors: SubSystem::default(),
             scouts: vec![Scout::default(); 6],
+            scouts_in_use: None,
             current_leap: Leap::default(),
             log: Vec::new(),
             pilots: vec![Pilot::default(); 6],
@@ -119,6 +121,11 @@ impl App {
         for pilot in self.pilots.iter_mut() {
             pilot.new_name(&mut in_use);
             self.pilot_in_use = in_use.clone();
+        }
+        in_use = self.scouts_in_use.clone();
+        for scout in self.scouts.iter_mut() {
+            scout.ship.new_name(&mut in_use);
+            self.scouts_in_use = in_use.clone();
         }
         while !self.exit {
             terminal.draw(|frame| self.render_frame(frame))?;
