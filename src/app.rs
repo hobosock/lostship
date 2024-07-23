@@ -535,11 +535,11 @@ fn r_key_press(app: &mut App) {
 /// only active on Status tab, upgrades subsystem if not already upgraded and enough parts are
 /// available (only works in repair phase)
 fn u_key_press(app: &mut App) {
-    if app.jump_step == JumpStep::Step6 {
+    if app.jump_step == JumpStep::Step5 {
         match app.active_tab {
             MenuTabs::Status => {
-                if app.hanger_state.selected().is_some() && app.parts >= 4 {
-                    let ss = app.hanger_state.selected().unwrap();
+                if app.subsys_list_state.selected().is_some() && app.parts >= 4 {
+                    let ss = app.subsys_list_state.selected().unwrap();
                     if ss == 0 {
                         app.hull_upgrade = true;
                     } else if ss == 1 {
@@ -554,6 +554,8 @@ fn u_key_press(app: &mut App) {
                         app.sensors.upgrade = true;
                     }
                     app.parts -= 4;
+                } else {
+                    app.game_text += "List state is none I guess.";
                 }
             }
             _ => {}
