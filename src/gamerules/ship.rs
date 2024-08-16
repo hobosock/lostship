@@ -84,6 +84,7 @@ pub struct Scout {
     pub position: u64,
     pub ship: Ship,
     pub pilot: Pilot,
+    pub active: bool,
 }
 
 /// repairs selected subsystem by one level

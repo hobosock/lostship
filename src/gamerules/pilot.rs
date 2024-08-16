@@ -52,6 +52,7 @@ pub struct Pilot {
     pub rank: Rank,
     pub status: PilotStatus,
     pub injury_timer: u64,
+    pub active: bool,
 }
 
 impl Default for Pilot {
@@ -62,6 +63,7 @@ impl Default for Pilot {
             rank: Rank::default(),
             status: PilotStatus::default(),
             injury_timer: 0,
+            active: true,
         }
     }
 }

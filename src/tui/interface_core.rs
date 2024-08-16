@@ -12,6 +12,7 @@ use ratatui::{
         Borders, Cell, List, Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs, Wrap,
     },
 };
+use std::cmp::min;
 use std::io::{self, stdout, Stdout};
 
 use crate::{
@@ -293,7 +294,8 @@ fn draw_main_log_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: 
 
 fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     // reset pilot information in case order changed
-    for i in 0..app.scouts.len() {
+    let deploy_length = min(app.scouts.len(), app.pilots.len());
+    for i in 0..deploy_length {
         app.scouts[i].pilot = app.pilots[i].clone();
     }
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
@@ -308,6 +310,11 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         Row::default(),
     ];
     for (i, scout) in app.scouts.iter().enumerate() {
+        let scout_name_text = if scout.active {
+            scout.ship.name.clone().into()
+        } else {
+            scout.ship.name.clone().underlined().gray().italic()
+        };
         let damage_text = match scout.ship.damage {
             ShipDamage::Normal => scout.ship.damage.to_string().green(),
             ShipDamage::Half => scout.ship.damage.to_string().yellow(),
@@ -321,7 +328,7 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         };
         let row = Row::new(vec![
             Cell::from(scout.position.to_string()),
-            Cell::from(scout.ship.name.clone()),
+            Cell::from(scout_name_text),
             Cell::from(pilot_text),
             Cell::from(damage_text),
         ]);
@@ -369,6 +376,11 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
         Row::default(),
     ];
     for (i, pilot) in app.pilots.iter().enumerate() {
+        let name_text = if pilot.active {
+            pilot.name.clone().into()
+        } else {
+            pilot.name.clone().underlined().gray().italic()
+        };
         let rank_text = match pilot.rank {
             Rank::Rookie => pilot.rank.to_string().white(),
             Rank::Veteran => pilot.rank.to_string().cyan(),
@@ -381,7 +393,7 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
         };
         // TODO: color leaps injured row?
         let row = Row::new(vec![
-            Cell::from(pilot.name.clone()),
+            Cell::from(name_text),
             Cell::from(pilot.kills.to_string()),
             Cell::from(rank_text),
             Cell::from(injured_text),

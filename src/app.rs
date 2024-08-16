@@ -38,12 +38,14 @@ pub struct App {
     pub sick_bay: SubSystem,
     pub sensors: SubSystem,
     pub scouts: Vec<Scout>,
-    pub scouts_in_use: Option<Vec<usize>>,
+    pub scouts_in_use: Option<Vec<usize>>, // names of scouts in use
+    pub scouts_active: Vec<Scout>,         // scouts marked for deployment
     pub current_leap: Leap,
     pub log: Vec<Leap>,
     pub pilots: Vec<Pilot>,
     pub pilot_assignment: Vec<usize>,
     pub pilot_in_use: Option<Vec<usize>>,
+    pub pilots_active: Vec<Pilot>,
     pub new_pilots: Vec<u64>,
     pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
@@ -67,6 +69,8 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
+        let scout_vec = vec![Scout::default(); 6];
+        let pilot_vec = vec![Pilot::default(); 6];
         Self {
             active_tab: MenuTabs::default(),
             exit: false,
@@ -82,13 +86,15 @@ impl Default for App {
             scout_bay: SubSystem::default(),
             sick_bay: SubSystem::default(),
             sensors: SubSystem::default(),
-            scouts: vec![Scout::default(); 6],
+            scouts: scout_vec.clone(),
             scouts_in_use: None,
+            scouts_active: scout_vec.clone(),
             current_leap: Leap::default(),
             log: Vec::new(),
-            pilots: vec![Pilot::default(); 6],
+            pilots: pilot_vec.clone(),
             pilot_assignment: vec![0, 1, 2, 3, 4, 5],
             pilot_in_use: None,
+            pilots_active: pilot_vec.clone(),
             new_pilots: Vec::new(),
             honor_roll: Vec::new(),
             laser_kills: 0,
@@ -416,57 +422,87 @@ fn s_key_press(app: &mut App) {
 /// logic for a key presses
 /// if in combat AND scout turn AND selected valid scout AND enemy, roll for damage
 /// also handles upgrading rank if pilot scores a kill
+/// activates/deactivates pilots and scouts in the crew tab
 fn a_key_press(app: &mut App) {
-    if app.combat.is_some()
-        && app.combat.as_ref().unwrap().scout_half
-        && app.combat_scout_state.selected().is_some()
-        && app.combat_enemy_state.selected().is_some()
-    {
-        // make sure valid ships are selected (not destroyed, etc.)
-        let mut combat = app.combat.clone().unwrap();
-        let scout_pos = app.combat_scout_state.selected().unwrap();
-        let scout = app.scouts[scout_pos].clone();
-        let turn_ok = combat.scout_turns[scout_pos];
-        let enemy_pos = app.combat_enemy_state.selected().unwrap();
-        let enemy = combat.enemy_stats[enemy_pos].clone();
-        let ship_ok = matches!(scout.ship.damage, ShipDamage::Normal | ShipDamage::Half);
-        let pilot_ok = matches!(
-            scout.pilot.status,
-            PilotStatus::Normal | PilotStatus::Injured
-        );
-        let target_ok = enemy.fuel > 0 && enemy.hp > 0; // bool literal?
+    match app.active_tab {
+        MenuTabs::Combat => {
+            if app.combat.is_some()
+                && app.combat.as_ref().unwrap().scout_half
+                && app.combat_scout_state.selected().is_some()
+                && app.combat_enemy_state.selected().is_some()
+            {
+                // make sure valid ships are selected (not destroyed, etc.)
+                let mut combat = app.combat.clone().unwrap();
+                let scout_pos = app.combat_scout_state.selected().unwrap();
+                let scout = app.scouts[scout_pos].clone();
+                let turn_ok = combat.scout_turns[scout_pos];
+                let enemy_pos = app.combat_enemy_state.selected().unwrap();
+                let enemy = combat.enemy_stats[enemy_pos].clone();
+                let ship_ok = matches!(scout.ship.damage, ShipDamage::Normal | ShipDamage::Half);
+                let pilot_ok = matches!(
+                    scout.pilot.status,
+                    PilotStatus::Normal | PilotStatus::Injured
+                );
+                let target_ok = enemy.fuel > 0 && enemy.hp > 0; // bool literal?
 
-        if ship_ok && pilot_ok && target_ok && !turn_ok {
-            let damage = scout_attack(&scout);
-            // update combat log
-            app.current_leap.damage[enemy_pos] += damage;
-            // apply damage
-            combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
-            // check for kill and mark if appropriate
-            // TODO: clean this up
-            if combat.enemy_stats[enemy_pos].hp == 0 {
-                app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
-                app.scouts[scout_pos].pilot.rank_up();
-                app.pilots[scout_pos].mark_kill(&enemy.model);
-                app.pilots[scout_pos].rank_up();
-                combat.scout_formation[scout_pos]
-                    .pilot
-                    .mark_kill(&enemy.model);
-                combat.scout_formation[scout_pos].pilot.rank_up();
-                // NOTE: This is because pilot information and order is copied into scout struct at
-                // certain points (like when drawing combat tab).  Probably shouldn't do that, come
-                // back to this when you've found a better way.
+                if ship_ok && pilot_ok && target_ok && !turn_ok {
+                    let damage = scout_attack(&scout);
+                    // update combat log
+                    app.current_leap.damage[enemy_pos] += damage;
+                    // apply damage
+                    combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+                    // check for kill and mark if appropriate
+                    // TODO: clean this up
+                    if combat.enemy_stats[enemy_pos].hp == 0 {
+                        app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
+                        app.scouts[scout_pos].pilot.rank_up();
+                        app.pilots[scout_pos].mark_kill(&enemy.model);
+                        app.pilots[scout_pos].rank_up();
+                        combat.scout_formation[scout_pos]
+                            .pilot
+                            .mark_kill(&enemy.model);
+                        combat.scout_formation[scout_pos].pilot.rank_up();
+                        // NOTE: This is because pilot information and order is copied into scout struct at
+                        // certain points (like when drawing combat tab).  Probably shouldn't do that, come
+                        // back to this when you've found a better way.
+                    }
+                    combat.scout_turns[scout_pos] = true;
+                    combat.combat_text = format!(
+                        "{} deals {} damage to {}",
+                        scout.pilot.name, damage, enemy.model
+                    );
+                } else {
+                    combat.combat_text =
+                        "Make sure a valid scout and target are selected.".to_string();
+                }
+
+                app.combat = Some(combat); // rewrap and assign to app state
             }
-            combat.scout_turns[scout_pos] = true;
-            combat.combat_text = format!(
-                "{} deals {} damage to {}",
-                scout.pilot.name, damage, enemy.model
-            );
-        } else {
-            combat.combat_text = "Make sure a valid scout and target are selected.".to_string();
         }
-
-        app.combat = Some(combat); // rewrap and assign to app state
+        MenuTabs::Crew => {
+            // activate/deactivate
+            if app.crew_state.selected().is_some() {
+                let num_select = app.crew_state.selected().unwrap();
+                let active_state = app.pilots[num_select].active;
+                if active_state {
+                    app.pilots[num_select].active = false;
+                } else {
+                    app.pilots[num_select].active = true;
+                }
+            }
+        }
+        MenuTabs::Hangar => {
+            if app.hanger_state.selected().is_some() {
+                let num_select = app.hanger_state.selected().unwrap();
+                let active_state = app.scouts[num_select].active;
+                if active_state {
+                    app.scouts[num_select].active = false;
+                } else {
+                    app.scouts[num_select].active = true;
+                }
+            }
+        }
+        _ => {}
     }
 }
 
