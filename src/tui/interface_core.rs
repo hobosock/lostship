@@ -24,7 +24,10 @@ use crate::{
     resources::{about::ABOUT_STR, help::HELP_STR},
 };
 
-use super::status::{get_fuel_string, get_hull_string, get_parts_string, get_subsys_string};
+use super::status::{
+    engine_string, get_fuel_string, get_hull_string, get_parts_string, get_subsys_string,
+    hull_string, mining_laser_string, scout_bay_string, sensor_string, sick_bay_string,
+};
 
 /// a type alias for the terminal type used
 pub type Tui = Terminal<CrosstermBackend<Stdout>>;
@@ -223,21 +226,30 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         Line::from(vec!["Fuel: ".into(), get_fuel_string(&app.fuel)]),
         Line::from(vec!["Parts: ".into(), get_parts_string(&app.parts)]),
         Line::from(vec![
-            "Hull Damage: ".into(),
+            hull_string(app.hull_upgrade),
             get_hull_string(app.hull_damage, app.hull_upgrade),
         ]),
-        Line::from(vec!["Engines: ".into(), get_subsys_string(&app.engine)]),
         Line::from(vec![
-            "Mining Laser: ".into(),
+            engine_string(app.engine.upgrade),
+            get_subsys_string(&app.engine),
+        ]),
+        Line::from(vec![
+            mining_laser_string(app.mining_laser.upgrade),
             get_subsys_string(&app.mining_laser),
             format!(" ({} kills)", app.laser_kills).into(),
         ]),
         Line::from(vec![
-            "Scout Bay: ".into(),
+            scout_bay_string(app.scout_bay.upgrade),
             get_subsys_string(&app.scout_bay),
         ]),
-        Line::from(vec!["Sick Bay: ".into(), get_subsys_string(&app.sick_bay)]),
-        Line::from(vec!["Sensors: ".into(), get_subsys_string(&app.sensors)]),
+        Line::from(vec![
+            sick_bay_string(app.sick_bay.upgrade),
+            get_subsys_string(&app.sick_bay),
+        ]),
+        Line::from(vec![
+            sensor_string(app.sensors.upgrade),
+            get_subsys_string(&app.sensors),
+        ]),
         Line::from(vec![app.game_text.as_str().into()]),
     ]);
     let main_thing = Paragraph::new(status_text).wrap(Wrap { trim: true });

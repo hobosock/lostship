@@ -55,3 +55,57 @@ pub fn check_hull(damage: u64, upgraded: bool) -> bool {
     let max = if upgraded { 7 } else { 6 };
     damage >= max
 }
+
+/// returns hull string, bold if upgraded
+pub fn hull_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Hull Damage (U): ".bold()
+    } else {
+        "Hull Damage: ".into()
+    }
+}
+
+/// returns engine string, bold if upgraded
+pub fn engine_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Engines (U): ".bold()
+    } else {
+        "Engines: ".into()
+    }
+}
+
+/// returns mining laser string, bold if upgraded
+pub fn mining_laser_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Mining Laser (U): ".bold()
+    } else {
+        "Mining Laser: ".into()
+    }
+}
+
+/// returns scout bay string, bold if upgraded
+pub fn scout_bay_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Scout Bay (U): ".bold()
+    } else {
+        "Scout Bay: ".into()
+    }
+}
+
+/// returns sick bay string, bold if upgraded
+pub fn sick_bay_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Sick Bay (U): ".bold()
+    } else {
+        "Sick Bay: ".into()
+    }
+}
+
+/// returns sensor string, bold if upgraded
+pub fn sensor_string(upgraded: bool) -> Span<'static> {
+    if upgraded {
+        "Sensors (U): ".bold()
+    } else {
+        "Sensors: ".into()
+    }
+}
