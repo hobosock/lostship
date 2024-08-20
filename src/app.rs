@@ -18,7 +18,7 @@ use ratatui::{
     prelude::*,
     widgets::{ListState, ScrollbarState, TableState},
 };
-use std::io;
+use std::{cmp::min, io};
 
 // define the app
 #[derive(Debug)]
@@ -621,12 +621,25 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step2 => {
                     app.game_text = "Assessing threats ...".to_string();
-                    let mut scout_vec = Vec::from(app.scouts.clone());
+                    let base_scout_vec = Vec::from(app.scouts.clone());
+                    /* old basic implementation of KIA pilots, need more advanced method
                     if app.scouts.len() > app.pilots.len() {
                         for _i in 0..(app.scouts.len() - app.pilots.len()) {
                             scout_vec.pop();
                         }
                     }
+                    */
+                    let base_pilot_vec = Vec::from(app.pilots.clone());
+                    let min_length = min(base_scout_vec.len(), base_pilot_vec.len());
+                    let mut scout_vec: Vec<Scout> = Vec::new();
+                    let mut pilot_vec: Vec<Pilot> = Vec::new();
+                    for i in 0..min_length {
+                        if base_scout_vec[i].active && base_pilot_vec[i].active {
+                            scout_vec.push(base_scout_vec[i].clone());
+                            pilot_vec.push(base_pilot_vec[i].clone());
+                        }
+                    }
+                    // TODO: probably need to handle when final vectors are empty
                     app.combat_enemy_state.select(Some(0)); // out of range
                     let enemy_vec = match assess_threat(app) {
                         Some(ev) => {

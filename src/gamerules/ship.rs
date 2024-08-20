@@ -79,12 +79,23 @@ impl Ship {
 }
 
 /// Scout struct with Pilot, Ship, and Position
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Scout {
     pub position: u64,
     pub ship: Ship,
     pub pilot: Pilot,
     pub active: bool,
+}
+
+impl Default for Scout {
+    fn default() -> Self {
+        Scout {
+            position: 0,
+            ship: Ship::default(),
+            pilot: Pilot::default(),
+            active: true,
+        }
+    }
 }
 
 /// repairs selected subsystem by one level
