@@ -115,9 +115,11 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 "<Q>".yellow().bold(),
                 " Quit ".into(),
                 "<Up>/<Down>".yellow().bold(),
-                " Change selection. ".into(),
+                " Change selection ".into(),
                 "<R>".yellow().bold(),
                 " Repair ".into(),
+                "<N>".yellow().bold(),
+                " Next Phase ".into(),
             ])]);
         }
         MenuTabs::Log => {
@@ -144,6 +146,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Repair ".into(),
                 "<U>".yellow().bold(),
                 " Upgrade ".into(),
+                "<A>".yellow().bold(),
+                " Activate ".into(),
             ])]);
         }
         MenuTabs::Crew => {
@@ -157,6 +161,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Edit ".into(),
                 "<W>/<S>".yellow().bold(),
                 " Shift Assignment ".into(),
+                "<A>".yellow().bold(),
+                " Activate ".into(),
             ])]);
         }
         MenuTabs::Combat => {
