@@ -71,6 +71,6 @@ pub fn roll(side: i64) -> i64 {
     if side == 1 {
         1
     } else {
-        rand::thread_rng().gen_range(1..side)
+        rand::thread_rng().gen_range(1..=side)
     }
 }

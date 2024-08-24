@@ -12,19 +12,23 @@ use ratatui::{
         Borders, Cell, List, Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs, Wrap,
     },
 };
+use std::cmp::min;
 use std::io::{self, stdout, Stdout};
 
 use crate::{
     app::App,
     gamerules::{
         combat::combat_to_app,
-        pilot::{PilotStatus, Rank},
+        pilot::{honor_roll_to_list, PilotStatus, Rank},
         ship::ShipDamage,
     },
     resources::{about::ABOUT_STR, help::HELP_STR},
 };
 
-use super::status::{get_fuel_string, get_hull_string, get_parts_string, get_subsys_string};
+use super::status::{
+    engine_string, get_fuel_string, get_hull_string, get_parts_string, get_subsys_string,
+    hull_string, mining_laser_string, scout_bay_string, sensor_string, sick_bay_string,
+};
 
 /// a type alias for the terminal type used
 pub type Tui = Terminal<CrosstermBackend<Stdout>>;
@@ -111,9 +115,11 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 "<Q>".yellow().bold(),
                 " Quit ".into(),
                 "<Up>/<Down>".yellow().bold(),
-                " Change selection. ".into(),
+                " Change selection ".into(),
                 "<R>".yellow().bold(),
                 " Repair ".into(),
+                "<N>".yellow().bold(),
+                " Next Phase ".into(),
             ])]);
         }
         MenuTabs::Log => {
@@ -140,6 +146,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Repair ".into(),
                 "<U>".yellow().bold(),
                 " Upgrade ".into(),
+                "<A>".yellow().bold(),
+                " Activate ".into(),
             ])]);
         }
         MenuTabs::Crew => {
@@ -153,6 +161,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                 " Edit ".into(),
                 "<W>/<S>".yellow().bold(),
                 " Shift Assignment ".into(),
+                "<A>".yellow().bold(),
+                " Activate ".into(),
             ])]);
         }
         MenuTabs::Combat => {
@@ -223,21 +233,30 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         Line::from(vec!["Fuel: ".into(), get_fuel_string(&app.fuel)]),
         Line::from(vec!["Parts: ".into(), get_parts_string(&app.parts)]),
         Line::from(vec![
-            "Hull Damage: ".into(),
+            hull_string(app.hull_upgrade),
             get_hull_string(app.hull_damage, app.hull_upgrade),
         ]),
-        Line::from(vec!["Engines: ".into(), get_subsys_string(&app.engine)]),
         Line::from(vec![
-            "Mining Laser: ".into(),
+            engine_string(app.engine.upgrade),
+            get_subsys_string(&app.engine),
+        ]),
+        Line::from(vec![
+            mining_laser_string(app.mining_laser.upgrade),
             get_subsys_string(&app.mining_laser),
             format!(" ({} kills)", app.laser_kills).into(),
         ]),
         Line::from(vec![
-            "Scout Bay: ".into(),
+            scout_bay_string(app.scout_bay.upgrade),
             get_subsys_string(&app.scout_bay),
         ]),
-        Line::from(vec!["Sick Bay: ".into(), get_subsys_string(&app.sick_bay)]),
-        Line::from(vec!["Sensors: ".into(), get_subsys_string(&app.sensors)]),
+        Line::from(vec![
+            sick_bay_string(app.sick_bay.upgrade),
+            get_subsys_string(&app.sick_bay),
+        ]),
+        Line::from(vec![
+            sensor_string(app.sensors.upgrade),
+            get_subsys_string(&app.sensors),
+        ]),
         Line::from(vec![app.game_text.as_str().into()]),
     ]);
     let main_thing = Paragraph::new(status_text).wrap(Wrap { trim: true });
@@ -281,7 +300,8 @@ fn draw_main_log_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: 
 
 fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
     // reset pilot information in case order changed
-    for i in 0..app.scouts.len() {
+    let deploy_length = min(app.scouts.len(), app.pilots.len());
+    for i in 0..deploy_length {
         app.scouts[i].pilot = app.pilots[i].clone();
     }
     let header_row = Row::new(vec!["Flight Position", "Ship Name", "Pilot", "Damage"])
@@ -296,6 +316,11 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         Row::default(),
     ];
     for (i, scout) in app.scouts.iter().enumerate() {
+        let scout_name_text = if scout.active {
+            scout.ship.name.clone().into()
+        } else {
+            scout.ship.name.clone().underlined().gray().italic()
+        };
         let damage_text = match scout.ship.damage {
             ShipDamage::Normal => scout.ship.damage.to_string().green(),
             ShipDamage::Half => scout.ship.damage.to_string().yellow(),
@@ -309,7 +334,7 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         };
         let row = Row::new(vec![
             Cell::from(scout.position.to_string()),
-            Cell::from(scout.ship.name.clone()),
+            Cell::from(scout_name_text),
             Cell::from(pilot_text),
             Cell::from(damage_text),
         ]);
@@ -332,9 +357,22 @@ fn draw_main_hangar_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
 /// renders the main block for the Crew tab
 fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block: Block) {
+    // format center area of GUI
+    let inner_area = main_block.inner(chunk);
+    main_block.render(chunk, frame.buffer_mut());
+    let vt_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(3), Constraint::Length(3)])
+        .split(inner_area);
+    let ht_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)])
+        .split(vt_chunks[0]);
+    // create main table for managing crew
     let header_row = Row::new(vec!["Name", "Kills", "Rank", "Status", "Leaps Injured"])
         .style(Style::default().cyan().bold())
         .bottom_margin(1);
+    // NOTE: couldn't figure out how to generate rows based on current length of app.pilots
     let mut rows = [
         Row::default(),
         Row::default(),
@@ -344,6 +382,11 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
         Row::default(),
     ];
     for (i, pilot) in app.pilots.iter().enumerate() {
+        let name_text = if pilot.active {
+            pilot.name.clone().into()
+        } else {
+            pilot.name.clone().underlined().gray().italic()
+        };
         let rank_text = match pilot.rank {
             Rank::Rookie => pilot.rank.to_string().white(),
             Rank::Veteran => pilot.rank.to_string().cyan(),
@@ -356,7 +399,7 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
         };
         // TODO: color leaps injured row?
         let row = Row::new(vec![
-            Cell::from(pilot.name.clone()),
+            Cell::from(name_text),
             Cell::from(pilot.kills.to_string()),
             Cell::from(rank_text),
             Cell::from(injured_text),
@@ -374,10 +417,25 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .header(header_row)
-        .block(main_block)
         .highlight_style(Style::default().reversed())
         .highlight_symbol(">>");
-    frame.render_stateful_widget(table, chunk, &mut app.crew_state);
+    frame.render_stateful_widget(table, ht_chunks[0], &mut app.crew_state);
+    // draw roll of honor
+    let honor_block = Block::default()
+        .title("| Roll of Honor |")
+        .title_alignment(Alignment::Center)
+        .borders(Borders::ALL)
+        .border_style(Color::Magenta);
+    let honor_text = honor_roll_to_list(&app.honor_roll);
+    let honor_list = List::new(honor_text).block(honor_block);
+    frame.render_widget(honor_list, ht_chunks[1]);
+    // display new pilot training progress
+    let mut training_text = String::new();
+    for i in &app.new_pilots {
+        training_text.push_str(&format!("| New Pilot - {} / 2 leaps trained ", i));
+    }
+    let training_paragraph = Paragraph::new(training_text);
+    frame.render_widget(training_paragraph, vt_chunks[1]);
 }
 
 /// renders main block for About tab
@@ -412,7 +470,9 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
         // reset pilot information in case order changed
         // TODO: maybe don't want to do this during a combat phase?
-        for i in 0..app.scouts.len() {
+        // TODO: probably use minimum of length of pilots and scouts
+        let launch_length = app.scouts.len().min(app.pilots.len());
+        for i in 0..launch_length {
             app.scouts[i].pilot = app.pilots[i].clone();
         }
 

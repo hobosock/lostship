@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::app::App;
+use crate::{app::App, resources::scout_names::generate_scout_name};
 
 use super::pilot::Pilot;
 
@@ -71,12 +71,31 @@ impl Default for Ship {
     }
 }
 
+impl Ship {
+    /// auto-generated name
+    pub fn new_name(&mut self, in_use: &mut Option<Vec<usize>>) {
+        self.name = generate_scout_name(in_use);
+    }
+}
+
 /// Scout struct with Pilot, Ship, and Position
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Scout {
     pub position: u64,
     pub ship: Ship,
     pub pilot: Pilot,
+    pub active: bool,
+}
+
+impl Default for Scout {
+    fn default() -> Self {
+        Scout {
+            position: 0,
+            ship: Ship::default(),
+            pilot: Pilot::default(),
+            active: true,
+        }
+    }
 }
 
 /// repairs selected subsystem by one level

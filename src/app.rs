@@ -2,20 +2,23 @@ use crate::{
     gamerules::{
         combat::{enemy_damage, enemy_turn, mining_laser, scout_attack, Combat},
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
-        pilot::{Pilot, PilotStatus},
+        pilot::{update_pilot_info, Pilot, PilotStatus},
         scout::scout_repair,
         ship::{subsystem_repair, Scout, ShipDamage, SubSystem},
         threat::{threats_to_fighters, Threats},
         Leap,
     },
-    tui::interface_core::{select_down, select_up, ui, MenuTabs, Tui},
+    tui::{
+        interface_core::{select_down, select_up, ui, MenuTabs, Tui},
+        status::check_hull,
+    },
 };
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     prelude::*,
     widgets::{ListState, ScrollbarState, TableState},
 };
-use std::io;
+use std::{cmp::min, io};
 
 // define the app
 #[derive(Debug)]
@@ -34,11 +37,14 @@ pub struct App {
     pub scout_bay: SubSystem,
     pub sick_bay: SubSystem,
     pub sensors: SubSystem,
-    pub scouts: [Scout; 6],
+    pub scouts: Vec<Scout>,
+    pub scouts_in_use: Option<Vec<usize>>, // names of scouts in use
     pub current_leap: Leap,
     pub log: Vec<Leap>,
-    pub pilots: [Pilot; 6],
-    pub pilot_assignment: [usize; 6],
+    pub pilots: Vec<Pilot>,
+    pub pilot_in_use: Option<Vec<usize>>,
+    pub new_pilots: Vec<u64>,
+    pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
     pub in_combat: bool,
     pub combat: Option<Combat>,
@@ -60,6 +66,8 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
+        let scout_vec = vec![Scout::default(); 6];
+        let pilot_vec = vec![Pilot::default(); 6];
         Self {
             active_tab: MenuTabs::default(),
             exit: false,
@@ -75,30 +83,19 @@ impl Default for App {
             scout_bay: SubSystem::default(),
             sick_bay: SubSystem::default(),
             sensors: SubSystem::default(),
-            scouts: [
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-                Scout::default(),
-            ],
+            scouts: scout_vec.clone(),
+            scouts_in_use: None,
             current_leap: Leap::default(),
             log: Vec::new(),
-            pilots: [
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-                Pilot::default(),
-            ],
-            pilot_assignment: [0, 1, 2, 3, 4, 5],
+            pilots: pilot_vec.clone(),
+            pilot_in_use: None,
+            new_pilots: Vec::new(),
+            honor_roll: Vec::new(),
             laser_kills: 0,
             in_combat: false,
             combat: None,
             bwreckage: false,
-            game_text: String::new(),
+            game_text: "Your ship drops from hyper space in an unknown galaxy.  Cut off from the familiar, you must navigate this unkown system and find a planet to call your home.  Take some time to name your crew, and press [N] to set off on your adventure!".to_string(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
             crew_state: TableState::default(),
@@ -118,6 +115,18 @@ impl Default for App {
 impl App {
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut Tui) -> io::Result<()> {
+        // name pilots on startup
+        // NOTE: this whole sequence is really stupid
+        let mut in_use = self.pilot_in_use.clone();
+        for pilot in self.pilots.iter_mut() {
+            pilot.new_name(&mut in_use);
+            self.pilot_in_use = in_use.clone();
+        }
+        in_use = self.scouts_in_use.clone();
+        for scout in self.scouts.iter_mut() {
+            scout.ship.new_name(&mut in_use);
+            self.scouts_in_use = in_use.clone();
+        }
         while !self.exit {
             terminal.draw(|frame| self.render_frame(frame))?;
             self.handle_events()?;
@@ -407,57 +416,87 @@ fn s_key_press(app: &mut App) {
 /// logic for a key presses
 /// if in combat AND scout turn AND selected valid scout AND enemy, roll for damage
 /// also handles upgrading rank if pilot scores a kill
+/// activates/deactivates pilots and scouts in the crew tab
 fn a_key_press(app: &mut App) {
-    if app.combat.is_some()
-        && app.combat.as_ref().unwrap().scout_half
-        && app.combat_scout_state.selected().is_some()
-        && app.combat_enemy_state.selected().is_some()
-    {
-        // make sure valid ships are selected (not destroyed, etc.)
-        let mut combat = app.combat.clone().unwrap();
-        let scout_pos = app.combat_scout_state.selected().unwrap();
-        let scout = app.scouts[scout_pos].clone();
-        let turn_ok = combat.scout_turns[scout_pos];
-        let enemy_pos = app.combat_enemy_state.selected().unwrap();
-        let enemy = combat.enemy_stats[enemy_pos].clone();
-        let ship_ok = matches!(scout.ship.damage, ShipDamage::Normal | ShipDamage::Half);
-        let pilot_ok = matches!(
-            scout.pilot.status,
-            PilotStatus::Normal | PilotStatus::Injured
-        );
-        let target_ok = enemy.fuel > 0 && enemy.hp > 0; // bool literal?
+    match app.active_tab {
+        MenuTabs::Combat => {
+            if app.combat.is_some()
+                && app.combat.as_ref().unwrap().scout_half
+                && app.combat_scout_state.selected().is_some()
+                && app.combat_enemy_state.selected().is_some()
+            {
+                // make sure valid ships are selected (not destroyed, etc.)
+                let mut combat = app.combat.clone().unwrap();
+                let scout_pos = app.combat_scout_state.selected().unwrap();
+                let scout = app.scouts[scout_pos].clone();
+                let turn_ok = combat.scout_turns[scout_pos];
+                let enemy_pos = app.combat_enemy_state.selected().unwrap();
+                let enemy = combat.enemy_stats[enemy_pos].clone();
+                let ship_ok = matches!(scout.ship.damage, ShipDamage::Normal | ShipDamage::Half);
+                let pilot_ok = matches!(
+                    scout.pilot.status,
+                    PilotStatus::Normal | PilotStatus::Injured
+                );
+                let target_ok = enemy.fuel > 0 && enemy.hp > 0; // bool literal?
 
-        if ship_ok && pilot_ok && target_ok && !turn_ok {
-            let damage = scout_attack(&scout);
-            // update combat log
-            app.current_leap.damage[enemy_pos] += damage;
-            // apply damage
-            combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
-            // check for kill and mark if appropriate
-            // TODO: clean this up
-            if combat.enemy_stats[enemy_pos].hp == 0 {
-                app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
-                app.scouts[scout_pos].pilot.rank_up();
-                app.pilots[scout_pos].mark_kill(&enemy.model);
-                app.pilots[scout_pos].rank_up();
-                combat.scout_formation[scout_pos]
-                    .pilot
-                    .mark_kill(&enemy.model);
-                combat.scout_formation[scout_pos].pilot.rank_up();
-                // NOTE: This is because pilot information and order is copied into scout struct at
-                // certain points (like when drawing combat tab).  Probably shouldn't do that, come
-                // back to this when you've found a better way.
+                if ship_ok && pilot_ok && target_ok && !turn_ok {
+                    let damage = scout_attack(&scout);
+                    // update combat log
+                    app.current_leap.damage[enemy_pos] += damage;
+                    // apply damage
+                    combat.enemy_stats[enemy_pos].hp = enemy_damage(damage, enemy.hp);
+                    // check for kill and mark if appropriate
+                    // TODO: clean this up
+                    if combat.enemy_stats[enemy_pos].hp == 0 {
+                        app.scouts[scout_pos].pilot.mark_kill(&enemy.model);
+                        app.scouts[scout_pos].pilot.rank_up();
+                        app.pilots[scout_pos].mark_kill(&enemy.model);
+                        app.pilots[scout_pos].rank_up();
+                        combat.scout_formation[scout_pos]
+                            .pilot
+                            .mark_kill(&enemy.model);
+                        combat.scout_formation[scout_pos].pilot.rank_up();
+                        // NOTE: This is because pilot information and order is copied into scout struct at
+                        // certain points (like when drawing combat tab).  Probably shouldn't do that, come
+                        // back to this when you've found a better way.
+                    }
+                    combat.scout_turns[scout_pos] = true;
+                    combat.combat_text = format!(
+                        "{} deals {} damage to {}",
+                        scout.pilot.name, damage, enemy.model
+                    );
+                } else {
+                    combat.combat_text =
+                        "Make sure a valid scout and target are selected.".to_string();
+                }
+
+                app.combat = Some(combat); // rewrap and assign to app state
             }
-            combat.scout_turns[scout_pos] = true;
-            combat.combat_text = format!(
-                "{} deals {} damage to {}",
-                scout.pilot.name, damage, enemy.model
-            );
-        } else {
-            combat.combat_text = "Make sure a valid scout and target are selected.".to_string();
         }
-
-        app.combat = Some(combat); // rewrap and assign to app state
+        MenuTabs::Crew => {
+            // activate/deactivate
+            if app.crew_state.selected().is_some() {
+                let num_select = app.crew_state.selected().unwrap();
+                let active_state = app.pilots[num_select].active;
+                if active_state {
+                    app.pilots[num_select].active = false;
+                } else {
+                    app.pilots[num_select].active = true;
+                }
+            }
+        }
+        MenuTabs::Hangar => {
+            if app.hanger_state.selected().is_some() {
+                let num_select = app.hanger_state.selected().unwrap();
+                let active_state = app.scouts[num_select].active;
+                if active_state {
+                    app.scouts[num_select].active = false;
+                } else {
+                    app.scouts[num_select].active = true;
+                }
+            }
+        }
+        _ => {}
     }
 }
 
@@ -529,8 +568,8 @@ fn u_key_press(app: &mut App) {
     if app.jump_step == JumpStep::Step6 {
         match app.active_tab {
             MenuTabs::Status => {
-                if app.hanger_state.selected().is_some() && app.parts >= 4 {
-                    let ss = app.hanger_state.selected().unwrap();
+                if app.subsys_list_state.selected().is_some() && app.parts >= 4 {
+                    let ss = app.subsys_list_state.selected().unwrap();
                     if ss == 0 {
                         app.hull_upgrade = true;
                     } else if ss == 1 {
@@ -545,6 +584,10 @@ fn u_key_press(app: &mut App) {
                         app.sensors.upgrade = true;
                     }
                     app.parts -= 4;
+                } else if app.subsys_list_state.selected().is_some() && app.parts < 4 {
+                    app.game_text = "Not enough parts to upgrade!  4 parts required.".to_string();
+                } else if app.subsys_list_state.selected().is_none() {
+                    app.game_text = "Select a subsystem using arrow keys first!".to_string();
                 }
             }
             _ => {}
@@ -568,7 +611,26 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step2 => {
                     app.game_text = "Assessing threats ...".to_string();
-                    let scout_vec = Vec::from(app.scouts.clone());
+                    let base_scout_vec = Vec::from(app.scouts.clone());
+                    /* old basic implementation of KIA pilots, need more advanced method
+                    if app.scouts.len() > app.pilots.len() {
+                        for _i in 0..(app.scouts.len() - app.pilots.len()) {
+                            scout_vec.pop();
+                        }
+                    }
+                    */
+                    let base_pilot_vec = Vec::from(app.pilots.clone());
+                    let min_length = min(base_scout_vec.len(), base_pilot_vec.len());
+                    let mut scout_vec: Vec<Scout> = Vec::new();
+                    let mut pilot_vec: Vec<Pilot> = Vec::new();
+                    for i in 0..min_length {
+                        if base_scout_vec[i].active && base_pilot_vec[i].active {
+                            scout_vec.push(base_scout_vec[i].clone());
+                            pilot_vec.push(base_pilot_vec[i].clone());
+                        }
+                    }
+                    // TODO: probably need to handle when final vectors are empty
+                    app.combat_enemy_state.select(Some(0)); // out of range
                     let enemy_vec = match assess_threat(app) {
                         Some(ev) => {
                             app.game_text += "Enemy ships are preparing to engage!";
@@ -617,6 +679,23 @@ fn n_key_press(app: &mut App) {
                     if !app.in_combat {
                         app.jump_step = JumpStep::Step4;
                     }
+                    // NOTE: handling this is Step 6, leaving commented in case I need to reference
+                    /*
+                    // check for KIA pilots, handle training new ones
+                    for trainee in app.new_pilots.iter_mut() {
+                        *trainee += 1;
+                    }
+                    for pilot in app.pilots.iter() {
+                        if pilot.status == PilotStatus::Kia {
+                            app.new_pilots.push(0);
+                        }
+                    }
+                    */
+                    // check for hull destroyed
+                    app.hull_destroyed = check_hull(app.hull_damage, app.hull_upgrade);
+                    if app.hull_destroyed {
+                        app.game_text += "Hull destroyed!  Game Over.";
+                    }
                 }
                 JumpStep::Step4 => {
                     // TODO: error proof
@@ -642,23 +721,51 @@ fn n_key_press(app: &mut App) {
                     app.jump_step = JumpStep::Step6;
                 }
                 JumpStep::Step6 => {
-                    // scouts at 50% are repaired for free
-                    // inoperable scouts can be repaired for 1 part
-                    // each point of hull damage can be repaired for 1 part
-                    // a scout can be scrapped for +4 parts
-                    // repairing any system requires 2 parts
-                    // upgrading a system costs 4 parts
-                    // building a new scout costs 6 parts
-                    // after every 5th leap you get a free upgrade
-                    // injured pilots heal according to sick bay - do this last
-                    // inoperable sick bay means newly injured pilots die
-                    // start training up new pilots
                     app.game_text = "Heal and train new pilots.".to_string();
                     app.log.push(app.current_leap.clone());
                     app.jump_step = JumpStep::Step7;
+                    // heal pilots
+                    for pilot in &mut app.pilots {
+                        pilot.heal(&app.sick_bay);
+                    }
+                    // "bury" pilots
+                    let mut buried: Vec<usize> = Vec::new();
+                    // find KIA pilots and add to Roll of Honor
+                    for (i, pilot) in app.pilots.iter().enumerate() {
+                        if pilot.status == PilotStatus::Kia {
+                            app.honor_roll.push(pilot.clone());
+                            buried.push(i);
+                        }
+                    }
+                    // remove from crew
+                    for i in buried.iter().rev() {
+                        app.pilots.remove(*i);
+                        // NOTE: need to adjust crew table selected index to avoid out of range errors
+                        app.crew_state.select(Some(0));
+                    }
+                    // train existing pilots
+                    app.new_pilots = app.new_pilots.clone().into_iter().map(|x| x + 1).collect();
+                    // make new one if training is complete
+                    let mut trained: Vec<usize> = Vec::new();
+                    for (i, trainee) in app.new_pilots.iter().enumerate() {
+                        if *trainee >= 2 {
+                            trained.push(i);
+                            let mut new_guy = Pilot::default();
+                            new_guy.new_name(&mut app.pilot_in_use);
+                            app.pilots.push(new_guy);
+                        }
+                    }
+                    for i in trained.iter().rev() {
+                        app.new_pilots.remove(*i);
+                    }
+                    // start training new pilots
+                    for _i in 0..buried.len() {
+                        app.new_pilots.push(0);
+                    }
+                    update_pilot_info(app);
                 }
                 JumpStep::Step7 => {
-                    app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
+                    app.game_text = "Take a moment to organize your scouts and crew, and prepare to jump into the next system.".to_string();
                     app.jump_step = JumpStep::Step1;
                 }
             }
@@ -671,16 +778,11 @@ fn n_key_press(app: &mut App) {
             } else if app.combat.is_some() && app.combat.as_ref().unwrap().scout_half {
                 // TODO: debug only, delete this branch
                 let mut combat = app.combat.clone().unwrap();
-                combat.combat_text = format!(
-                    "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
-                    combat.scout_turns[0],
-                    combat.scout_turns[1],
-                    combat.scout_turns[2],
-                    combat.scout_turns[3],
-                    combat.scout_turns[4],
-                    combat.scout_turns[5],
-                    combat.laser_fired,
-                );
+                let mut text = String::new();
+                for turn in combat.scout_turns.iter() {
+                    text += &format!("{:?} ", turn);
+                }
+                combat.combat_text = text;
                 app.combat = Some(combat);
             }
         }

@@ -194,49 +194,105 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         }
                         // TODO: check for hull damage instead
                         Targets::FifthScout => {
-                            let damage_text = scout_damage(&mut combat.scout_formation[4]);
-                            combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}  ",
-                                combat.enemy_stats[i].model,
-                                combat.scout_formation[4].ship.name,
-                                damage_text
-                            );
+                            // make sure scout actually exists
+                            if combat.scout_formation.len() < 5
+                                || combat.scout_formation[4].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[4].pilot.status == PilotStatus::Kia
+                            {
+                                app.hull_damage += 1;
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages the hull.  ",
+                                    combat.enemy_stats[i].model,
+                                );
+                            } else {
+                                let damage_text = scout_damage(&mut combat.scout_formation[4]);
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages {}.  Scout {}  ",
+                                    combat.enemy_stats[i].model,
+                                    combat.scout_formation[4].ship.name,
+                                    damage_text
+                                );
+                            }
                         }
                         Targets::FourthScout => {
-                            let damage_text = scout_damage(&mut combat.scout_formation[3]);
-                            combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}  ",
-                                combat.enemy_stats[i].model,
-                                combat.scout_formation[3].ship.name,
-                                damage_text
-                            );
+                            if combat.scout_formation.len() < 4
+                                || combat.scout_formation[3].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[3].pilot.status == PilotStatus::Kia
+                            {
+                                app.hull_damage += 1;
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages the hull.  ",
+                                    combat.enemy_stats[i].model,
+                                );
+                            } else {
+                                let damage_text = scout_damage(&mut combat.scout_formation[3]);
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages {}.  Scout {}  ",
+                                    combat.enemy_stats[i].model,
+                                    combat.scout_formation[3].ship.name,
+                                    damage_text
+                                );
+                            }
                         }
                         Targets::ThirdScout => {
-                            let damage_text = scout_damage(&mut combat.scout_formation[2]);
-                            combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}  ",
-                                combat.enemy_stats[i].model,
-                                combat.scout_formation[2].ship.name,
-                                damage_text
-                            );
+                            if combat.scout_formation.len() < 3
+                                || combat.scout_formation[2].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[2].pilot.status == PilotStatus::Kia
+                            {
+                                app.hull_damage += 1;
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages the hull.  ",
+                                    combat.enemy_stats[i].model,
+                                );
+                            } else {
+                                let damage_text = scout_damage(&mut combat.scout_formation[2]);
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages {}.  Scout {}  ",
+                                    combat.enemy_stats[i].model,
+                                    combat.scout_formation[2].ship.name,
+                                    damage_text
+                                );
+                            }
                         }
                         Targets::SecondScout => {
-                            let damage_text = scout_damage(&mut combat.scout_formation[1]);
-                            combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}  ",
-                                combat.enemy_stats[i].model,
-                                combat.scout_formation[1].ship.name,
-                                damage_text
-                            );
+                            if combat.scout_formation.len() < 2
+                                || combat.scout_formation[1].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[1].pilot.status == PilotStatus::Kia
+                            {
+                                app.hull_damage += 1;
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages the hull.  ",
+                                    combat.enemy_stats[i].model,
+                                );
+                            } else {
+                                let damage_text = scout_damage(&mut combat.scout_formation[1]);
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages {}.  Scout {}  ",
+                                    combat.enemy_stats[i].model,
+                                    combat.scout_formation[1].ship.name,
+                                    damage_text
+                                );
+                            }
                         }
                         Targets::LeadScout => {
-                            let damage_text = scout_damage(&mut combat.scout_formation[0]);
-                            combat.combat_text += &format!(
-                                "Enemy {} damages {}.  Scout {}  ",
-                                combat.enemy_stats[i].model,
-                                combat.scout_formation[0].ship.name,
-                                damage_text
-                            );
+                            if combat.scout_formation.len() < 1
+                                || combat.scout_formation[0].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[0].pilot.status == PilotStatus::Kia
+                            {
+                                app.hull_damage += 1;
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages the hull.  ",
+                                    combat.enemy_stats[i].model,
+                                );
+                            } else {
+                                let damage_text = scout_damage(&mut combat.scout_formation[0]);
+                                combat.combat_text += &format!(
+                                    "Enemy {} damages {}.  Scout {}  ",
+                                    combat.enemy_stats[i].model,
+                                    combat.scout_formation[0].ship.name,
+                                    damage_text
+                                );
+                            }
                         }
                         Targets::Hull => {
                             app.hull_damage += 1;
