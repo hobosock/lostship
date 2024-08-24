@@ -760,6 +760,9 @@ fn n_key_press(app: &mut App) {
                     for (i, trainee) in app.new_pilots.iter().enumerate() {
                         if *trainee >= 2 {
                             trained.push(i);
+                            let mut new_guy = Pilot::default();
+                            new_guy.new_name(&mut app.pilot_in_use);
+                            app.pilots.push(new_guy);
                         }
                     }
                     for i in trained.iter().rev() {
