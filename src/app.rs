@@ -39,13 +39,10 @@ pub struct App {
     pub sensors: SubSystem,
     pub scouts: Vec<Scout>,
     pub scouts_in_use: Option<Vec<usize>>, // names of scouts in use
-    pub scouts_active: Vec<Scout>,         // scouts marked for deployment
     pub current_leap: Leap,
     pub log: Vec<Leap>,
     pub pilots: Vec<Pilot>,
-    pub pilot_assignment: Vec<usize>,
     pub pilot_in_use: Option<Vec<usize>>,
-    pub pilots_active: Vec<Pilot>,
     pub new_pilots: Vec<u64>,
     pub honor_roll: Vec<Pilot>,
     pub laser_kills: u64,
@@ -88,20 +85,17 @@ impl Default for App {
             sensors: SubSystem::default(),
             scouts: scout_vec.clone(),
             scouts_in_use: None,
-            scouts_active: scout_vec.clone(),
             current_leap: Leap::default(),
             log: Vec::new(),
             pilots: pilot_vec.clone(),
-            pilot_assignment: vec![0, 1, 2, 3, 4, 5],
             pilot_in_use: None,
-            pilots_active: pilot_vec.clone(),
             new_pilots: Vec::new(),
             honor_roll: Vec::new(),
             laser_kills: 0,
             in_combat: false,
             combat: None,
             bwreckage: false,
-            game_text: String::new(),
+            game_text: "Your ship drops from hyper space in an unknown galaxy.  Cut off from the familiar, you must navigate this unkown system and find a planet to call your home.  Take some time to name your crew, and press [N] to set off on your adventure!".to_string(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
             crew_state: TableState::default(),
@@ -576,8 +570,6 @@ fn u_key_press(app: &mut App) {
             MenuTabs::Status => {
                 if app.subsys_list_state.selected().is_some() && app.parts >= 4 {
                     let ss = app.subsys_list_state.selected().unwrap();
-                    app.game_text +=
-                        &format!("\nList state is some, parts > 4, subsystem = {}", ss);
                     if ss == 0 {
                         app.hull_upgrade = true;
                     } else if ss == 1 {
@@ -592,12 +584,10 @@ fn u_key_press(app: &mut App) {
                         app.sensors.upgrade = true;
                     }
                     app.parts -= 4;
-                } else {
-                    app.game_text += &format!(
-                        "\n List state is {:?}, parts = {}.",
-                        app.subsys_list_state.selected(),
-                        app.parts
-                    );
+                } else if app.subsys_list_state.selected().is_some() && app.parts < 4 {
+                    app.game_text = "Not enough parts to upgrade!  4 parts required.".to_string();
+                } else if app.subsys_list_state.selected().is_none() {
+                    app.game_text = "Select a subsystem using arrow keys first!".to_string();
                 }
             }
             _ => {}
@@ -775,7 +765,7 @@ fn n_key_press(app: &mut App) {
                     update_pilot_info(app);
                 }
                 JumpStep::Step7 => {
-                    app.game_text = "Can this step be removed?  I thought it would make sense to keep a while ago.".to_string();
+                    app.game_text = "Take a moment to organize your scouts and crew, and prepare to jump into the next system.".to_string();
                     app.jump_step = JumpStep::Step1;
                 }
             }
