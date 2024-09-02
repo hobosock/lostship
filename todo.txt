@@ -1,5 +1,2 @@
 enemies can destroy scouts after pilot is KIA (and vice versa) - inoperable scouts land immediately and can't be attacked again
 add in anomalies
-make sure Mk. IIIs have 4 attacks
-make sure bonuses are added to parts rolls after fighting Mk. IIs and Mk. IIIs
-check sub system upgrades all have effects

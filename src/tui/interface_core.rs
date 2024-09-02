@@ -20,9 +20,12 @@ use crate::{
     gamerules::{
         combat::combat_to_app,
         pilot::{honor_roll_to_list, PilotStatus, Rank},
-        ship::ShipDamage,
+        ship::{ShipDamage, Status},
     },
-    resources::{about::ABOUT_STR, help::HELP_STR},
+    resources::{
+        about::{ABOUT_STR, VER_STR},
+        help::HELP_STR,
+    },
 };
 
 use super::status::{
@@ -440,7 +443,7 @@ fn draw_main_crew_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_block:
 
 /// renders main block for About tab
 fn draw_main_about_tab(frame: &mut Frame, chunk: Rect, main_block: Block) {
-    let paragraph = Paragraph::new(ABOUT_STR)
+    let paragraph = Paragraph::new(vec![Line::from(ABOUT_STR), Line::from(VER_STR)])
         .wrap(Wrap { trim: false })
         .block(main_block);
     frame.render_widget(paragraph, chunk);
@@ -469,9 +472,21 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         }
 
         // reset pilot information in case order changed
-        // TODO: maybe don't want to do this during a combat phase?
-        // TODO: probably use minimum of length of pilots and scouts
-        let launch_length = app.scouts.len().min(app.pilots.len());
+        // TODO: maybe don't want to do this during a combat phase?, this is probably buggy
+        let launch_possible = min(app.scouts.len(), app.pilots.len());
+        let launch_limit = match app.scout_bay.status {
+            Status::Normal => {
+                if app.scout_bay.upgrade {
+                    6
+                } else {
+                    5
+                }
+            }
+            Status::Serviceable => 4,
+            Status::BarelyFunctioning => 3,
+            Status::Inoperable => 2,
+        };
+        let launch_length = min(launch_possible, launch_limit);
         for i in 0..launch_length {
             app.scouts[i].pilot = app.pilots[i].clone();
         }

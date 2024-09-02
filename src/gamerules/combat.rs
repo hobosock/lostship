@@ -67,9 +67,20 @@ pub fn enemy_attack() -> bool {
 }
 
 /// logic for enemy targeting - handles 1st round, 2nd round and after
-pub fn enemy_targeting(combat: &Combat) -> Targets {
+pub fn enemy_targeting(combat: &Combat, engine_status: Status, upgraded: bool) -> Targets {
     let roll_result = if combat.rounds > 1 {
-        roll(6) + roll(6)
+        let modifier = match engine_status {
+            Status::Normal => {
+                if upgraded {
+                    -1
+                } else {
+                    0
+                }
+            }
+            Status::Serviceable => 1,
+            _ => 2,
+        };
+        roll(6) + roll(6) + modifier
     } else {
         roll(6)
     };
@@ -147,10 +158,24 @@ pub fn scout_damage(scout: &mut Scout) -> String {
 }
 
 /// logic for mining laser attack
-pub fn mining_laser(upgraded: bool) -> u64 {
+pub fn mining_laser(status: Status, upgraded: bool) -> u64 {
     let mut roll_result = roll(6);
-    if upgraded {
-        roll_result += 1;
+    match status {
+        Status::Normal => {
+            if upgraded {
+                roll_result += 1;
+            }
+        }
+        Status::Serviceable => {
+            roll_result -= 1;
+        }
+        _ => {
+            if roll_result < 2 {
+                roll_result = 0;
+            } else {
+                roll_result -= 2;
+            }
+        }
     }
     if (4..=5).contains(&roll_result) {
         1
@@ -184,7 +209,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
                 if enemy_attack() {
-                    let target = enemy_targeting(combat);
+                    let target = enemy_targeting(combat, app.engine.status, app.engine.upgrade);
                     match target {
                         Targets::Superficial => {
                             combat.combat_text += &format!(
