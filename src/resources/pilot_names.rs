@@ -1,7 +1,7 @@
 use crate::gamerules::roll;
 
 /// list of pilot names for auto-generation
-const NAME_LIST: [&str; 34] = [
+const NAME_LIST: [&str; 45] = [
     "Seth",
     "Mad Max",
     "Fernando Alonso",
@@ -36,6 +36,17 @@ const NAME_LIST: [&str; 34] = [
     "Dr. Simon Tam",
     "River Tam",
     "Shepherd Derrial Book",
+    "One-Eye",
+    "Croaker",
+    "Silent",
+    "Lady",
+    "Goblin",
+    "Sleepy",
+    "Corpsegrinder",
+    "Chuck Schuldiner",
+    "Mike Trout",
+    "Aaron Judge",
+    "Shohei Ohtani",
 ];
 
 /// produces a random name from "NAME_LIST"
