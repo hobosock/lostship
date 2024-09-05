@@ -222,6 +222,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                             // make sure scout actually exists
                             if combat.scout_formation.len() < 5
                                 || combat.scout_formation[4].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[4].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[4].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -242,6 +243,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::FourthScout => {
                             if combat.scout_formation.len() < 4
                                 || combat.scout_formation[3].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[3].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[3].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -262,6 +264,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::ThirdScout => {
                             if combat.scout_formation.len() < 3
                                 || combat.scout_formation[2].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[2].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[2].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -282,6 +285,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::SecondScout => {
                             if combat.scout_formation.len() < 2
                                 || combat.scout_formation[1].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[1].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[1].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -302,6 +306,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::LeadScout => {
                             if combat.scout_formation.len() < 1
                                 || combat.scout_formation[0].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[0].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[0].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;

@@ -1,2 +1,1 @@
-enemies can destroy scouts after pilot is KIA (and vice versa) - inoperable scouts land immediately and can't be attacked again
 add in anomalies
