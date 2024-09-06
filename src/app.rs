@@ -6,7 +6,7 @@ use crate::{
         scout::scout_repair,
         ship::{subsystem_repair, Scout, ShipDamage, Status, SubSystem},
         threat::{threats_to_fighters, Threats},
-        Leap,
+        Leap, ScanResult,
     },
     tui::{
         interface_core::{select_down, select_up, ui, MenuTabs, Tui},
@@ -382,7 +382,8 @@ fn w_key_press(app: &mut App) {
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 shift_up(&mut app.scouts, app.hanger_state.selected().unwrap());
-                shift_up(&mut app.pilots, app.hanger_state.selected().unwrap());
+                // NOTE: I don't think you want to do this?
+                //shift_up(&mut app.pilots, app.hanger_state.selected().unwrap());
                 app.hanger_state
                     .select(select_up(app.hanger_state.selected(), app.scouts.len()));
             }
@@ -404,7 +405,8 @@ fn s_key_press(app: &mut App) {
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 shift_down(&mut app.scouts, app.hanger_state.selected().unwrap());
-                shift_down(&mut app.pilots, app.hanger_state.selected().unwrap());
+                // NOTE: I don't think you want to do this?
+                // shift_down(&mut app.pilots, app.hanger_state.selected().unwrap());
                 app.hanger_state
                     .select(select_down(app.hanger_state.selected(), app.scouts.len()));
             }
@@ -478,22 +480,14 @@ fn a_key_press(app: &mut App) {
             if app.crew_state.selected().is_some() {
                 let num_select = app.crew_state.selected().unwrap();
                 let active_state = app.pilots[num_select].active;
-                if active_state {
-                    app.pilots[num_select].active = false;
-                } else {
-                    app.pilots[num_select].active = true;
-                }
+                app.pilots[num_select].active = !active_state;
             }
         }
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 let num_select = app.hanger_state.selected().unwrap();
                 let active_state = app.scouts[num_select].active;
-                if active_state {
-                    app.scouts[num_select].active = false;
-                } else {
-                    app.scouts[num_select].active = true;
-                }
+                app.scouts[num_select].active = !active_state;
             }
         }
         _ => {}
@@ -617,7 +611,7 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step2 => {
                     app.game_text = "Assessing threats ...".to_string();
-                    let base_scout_vec = Vec::from(app.scouts.clone());
+                    let base_scout_vec = app.scouts.clone();
                     /* old basic implementation of KIA pilots, need more advanced method
                     if app.scouts.len() > app.pilots.len() {
                         for _i in 0..(app.scouts.len() - app.pilots.len()) {
@@ -625,7 +619,7 @@ fn n_key_press(app: &mut App) {
                         }
                     }
                     */
-                    let base_pilot_vec = Vec::from(app.pilots.clone());
+                    let base_pilot_vec = app.pilots.clone();
                     let mut min_length = min(base_scout_vec.len(), base_pilot_vec.len());
                     let launch_limit = match app.scout_bay.status {
                         Status::Normal => {
@@ -741,6 +735,9 @@ fn n_key_press(app: &mut App) {
                         "Scanning system... {scan_result} - gathered {fuel} fuel.  Make repairs and upkeep."
                     );
                     // TODO: handle anomoly and home scans
+                    if scan_result == ScanResult::Home {
+                        app.game_text += "You win!  You've successfully found a habitable planet for you new colony.";
+                    }
                     app.jump_step = JumpStep::Step6;
                 }
                 JumpStep::Step6 => {

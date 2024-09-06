@@ -89,7 +89,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     .highlight_style(Style::default().cyan().bold())
     .select(app.active_tab as usize);
     // main/center panel for display
-    let version = Title::from(Line::from(vec![" Lost Ship v0.1.0 ".into()]));
+    let version = Title::from(Line::from(vec![" Lost Ship v0.1.1 ".into()]));
     let main_block = Block::default()
         .title(
             Title::from(
@@ -227,7 +227,6 @@ fn draw_main_status_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
         .split(inner_area);
 
     // status, left section
-    // TODO: change color based on number, status
     let status_text = Text::from(vec![
         Line::from(vec![
             "LEAPS SINCE INCIDENT: ".into(),
@@ -466,9 +465,8 @@ fn draw_main_combat_tab(app: &mut App, frame: &mut Frame, chunk: Rect, main_bloc
 
         // check if combat is resolved
         if combat.enemy_stats.iter().all(|x| x.hp == 0 || x.fuel == 0) {
-            app.combat = None; // TODO: this breaks the "search the wreckage step"
+            app.combat = None;
             app.in_combat = false;
-            // app.jump_step = JumpStep::Step4; // TODO: delete?
         }
 
         // reset pilot information in case order changed

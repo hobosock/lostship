@@ -217,7 +217,6 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                                 combat.enemy_stats[i].model
                             );
                         }
-                        // TODO: check for hull damage instead
                         Targets::FifthScout => {
                             // make sure scout actually exists
                             if combat.scout_formation.len() < 5
@@ -304,7 +303,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                             }
                         }
                         Targets::LeadScout => {
-                            if combat.scout_formation.len() < 1
+                            if combat.scout_formation.is_empty()
                                 || combat.scout_formation[0].ship.damage == ShipDamage::Destroyed
                                 || combat.scout_formation[0].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[0].pilot.status == PilotStatus::Kia

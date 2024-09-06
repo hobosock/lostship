@@ -1,1 +1,3 @@
 add in anomalies
+when new pilots are being trained, hangar tab reuses pilot names
+when a pilot is killed, it shifts the remaining pilots into different scouts
