@@ -4,9 +4,9 @@ use crate::{
         game_functions::{assess_threat, leap_into_system, search_wreckage, system_scan, JumpStep},
         pilot::{update_pilot_info, Pilot, PilotStatus},
         scout::scout_repair,
-        ship::{subsystem_repair, Scout, ShipDamage, SubSystem},
+        ship::{subsystem_repair, Scout, ShipDamage, Status, SubSystem},
         threat::{threats_to_fighters, Threats},
-        Leap,
+        Leap, ScanResult,
     },
     tui::{
         interface_core::{select_down, select_up, ui, MenuTabs, Tui},
@@ -95,7 +95,7 @@ impl Default for App {
             in_combat: false,
             combat: None,
             bwreckage: false,
-            game_text: "Your ship drops from hyper space in an unknown galaxy.  Cut off from the familiar, you must navigate this unkown system and find a planet to call your home.  Take some time to name your crew, and press [N] to set off on your adventure!".to_string(),
+            game_text: "Your ship drops from hyper space in an unknown galaxy.  Cut off from the familiar, you must navigate this unknown system and find a planet to call your home.  Take some time to name your crew, and press [N] to set off on your adventure!".to_string(),
             jump_step: JumpStep::Step1,
             hanger_state: TableState::default(),
             crew_state: TableState::default(),
@@ -382,7 +382,8 @@ fn w_key_press(app: &mut App) {
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 shift_up(&mut app.scouts, app.hanger_state.selected().unwrap());
-                shift_up(&mut app.pilots, app.hanger_state.selected().unwrap());
+                // NOTE: I don't think you want to do this?
+                //shift_up(&mut app.pilots, app.hanger_state.selected().unwrap());
                 app.hanger_state
                     .select(select_up(app.hanger_state.selected(), app.scouts.len()));
             }
@@ -404,7 +405,8 @@ fn s_key_press(app: &mut App) {
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 shift_down(&mut app.scouts, app.hanger_state.selected().unwrap());
-                shift_down(&mut app.pilots, app.hanger_state.selected().unwrap());
+                // NOTE: I don't think you want to do this?
+                // shift_down(&mut app.pilots, app.hanger_state.selected().unwrap());
                 app.hanger_state
                     .select(select_down(app.hanger_state.selected(), app.scouts.len()));
             }
@@ -478,22 +480,14 @@ fn a_key_press(app: &mut App) {
             if app.crew_state.selected().is_some() {
                 let num_select = app.crew_state.selected().unwrap();
                 let active_state = app.pilots[num_select].active;
-                if active_state {
-                    app.pilots[num_select].active = false;
-                } else {
-                    app.pilots[num_select].active = true;
-                }
+                app.pilots[num_select].active = !active_state;
             }
         }
         MenuTabs::Hangar => {
             if app.hanger_state.selected().is_some() {
                 let num_select = app.hanger_state.selected().unwrap();
                 let active_state = app.scouts[num_select].active;
-                if active_state {
-                    app.scouts[num_select].active = false;
-                } else {
-                    app.scouts[num_select].active = true;
-                }
+                app.scouts[num_select].active = !active_state;
             }
         }
         _ => {}
@@ -513,7 +507,7 @@ fn m_key_press(app: &mut App) {
         let enemy = combat.enemy_stats[enemy_pos].clone();
         let target_ok = enemy.fuel > 0 && enemy.hp > 0;
         if target_ok && combat.rounds > 1 {
-            let damage = mining_laser(app.mining_laser.upgrade);
+            let damage = mining_laser(app.mining_laser.status, app.mining_laser.upgrade);
             // update leap log
             app.current_leap.damage[enemy_pos] += damage;
             // apply damage
@@ -603,15 +597,21 @@ fn n_key_press(app: &mut App) {
         MenuTabs::Status => {
             match app.jump_step {
                 JumpStep::Step1 => {
-                    app.current_leap = Leap::default(); // reset current leap log
-                    app.current_leap.number = app.leaps_since_incident + 1;
-                    app.game_text = "Jumping into a new system ...".to_string();
-                    leap_into_system(app);
-                    app.jump_step = JumpStep::Step2;
+                    if app.engine.status != Status::Inoperable {
+                        app.current_leap = Leap::default(); // reset current leap log
+                        app.current_leap.number = app.leaps_since_incident + 1;
+                        app.game_text = "Jumping into a new system ...".to_string();
+                        leap_into_system(app);
+                        app.jump_step = JumpStep::Step2;
+                    } else {
+                        app.game_text =
+                            "Cannot leap to a new system without repairing the engine!".to_string();
+                        // TODO: Game Over
+                    }
                 }
                 JumpStep::Step2 => {
                     app.game_text = "Assessing threats ...".to_string();
-                    let base_scout_vec = Vec::from(app.scouts.clone());
+                    let base_scout_vec = app.scouts.clone();
                     /* old basic implementation of KIA pilots, need more advanced method
                     if app.scouts.len() > app.pilots.len() {
                         for _i in 0..(app.scouts.len() - app.pilots.len()) {
@@ -619,8 +619,21 @@ fn n_key_press(app: &mut App) {
                         }
                     }
                     */
-                    let base_pilot_vec = Vec::from(app.pilots.clone());
-                    let min_length = min(base_scout_vec.len(), base_pilot_vec.len());
+                    let base_pilot_vec = app.pilots.clone();
+                    let mut min_length = min(base_scout_vec.len(), base_pilot_vec.len());
+                    let launch_limit = match app.scout_bay.status {
+                        Status::Normal => {
+                            if app.scout_bay.upgrade {
+                                6
+                            } else {
+                                5
+                            }
+                        }
+                        Status::Serviceable => 4,
+                        Status::BarelyFunctioning => 3,
+                        Status::Inoperable => 2,
+                    };
+                    min_length = min(min_length, launch_limit);
                     let mut scout_vec: Vec<Scout> = Vec::new();
                     let mut pilot_vec: Vec<Pilot> = Vec::new();
                     for i in 0..min_length {
@@ -711,13 +724,20 @@ fn n_key_press(app: &mut App) {
                     app.jump_step = JumpStep::Step5;
                 }
                 JumpStep::Step5 => {
-                    let (fuel, scan_result) = system_scan(app.leaps_since_incident);
+                    let (fuel, scan_result) = system_scan(
+                        app.leaps_since_incident,
+                        app.sensors.status,
+                        app.sensors.upgrade,
+                    );
                     app.fuel += fuel;
                     app.current_leap.fuel_found = fuel; // update log
                     app.game_text = format!(
                         "Scanning system... {scan_result} - gathered {fuel} fuel.  Make repairs and upkeep."
                     );
                     // TODO: handle anomoly and home scans
+                    if scan_result == ScanResult::Home {
+                        app.game_text += "You win!  You've successfully found a habitable planet for you new colony.";
+                    }
                     app.jump_step = JumpStep::Step6;
                 }
                 JumpStep::Step6 => {

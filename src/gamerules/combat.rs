@@ -67,9 +67,20 @@ pub fn enemy_attack() -> bool {
 }
 
 /// logic for enemy targeting - handles 1st round, 2nd round and after
-pub fn enemy_targeting(combat: &Combat) -> Targets {
+pub fn enemy_targeting(combat: &Combat, engine_status: Status, upgraded: bool) -> Targets {
     let roll_result = if combat.rounds > 1 {
-        roll(6) + roll(6)
+        let modifier = match engine_status {
+            Status::Normal => {
+                if upgraded {
+                    -1
+                } else {
+                    0
+                }
+            }
+            Status::Serviceable => 1,
+            _ => 2,
+        };
+        roll(6) + roll(6) + modifier
     } else {
         roll(6)
     };
@@ -147,10 +158,24 @@ pub fn scout_damage(scout: &mut Scout) -> String {
 }
 
 /// logic for mining laser attack
-pub fn mining_laser(upgraded: bool) -> u64 {
+pub fn mining_laser(status: Status, upgraded: bool) -> u64 {
     let mut roll_result = roll(6);
-    if upgraded {
-        roll_result += 1;
+    match status {
+        Status::Normal => {
+            if upgraded {
+                roll_result += 1;
+            }
+        }
+        Status::Serviceable => {
+            roll_result -= 1;
+        }
+        _ => {
+            if roll_result < 2 {
+                roll_result = 0;
+            } else {
+                roll_result -= 2;
+            }
+        }
     }
     if (4..=5).contains(&roll_result) {
         1
@@ -184,7 +209,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
             let guns = combat.enemy_stats[i].guns;
             for _ in 0..guns {
                 if enemy_attack() {
-                    let target = enemy_targeting(combat);
+                    let target = enemy_targeting(combat, app.engine.status, app.engine.upgrade);
                     match target {
                         Targets::Superficial => {
                             combat.combat_text += &format!(
@@ -192,11 +217,11 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                                 combat.enemy_stats[i].model
                             );
                         }
-                        // TODO: check for hull damage instead
                         Targets::FifthScout => {
                             // make sure scout actually exists
                             if combat.scout_formation.len() < 5
                                 || combat.scout_formation[4].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[4].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[4].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -217,6 +242,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::FourthScout => {
                             if combat.scout_formation.len() < 4
                                 || combat.scout_formation[3].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[3].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[3].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -237,6 +263,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::ThirdScout => {
                             if combat.scout_formation.len() < 3
                                 || combat.scout_formation[2].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[2].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[2].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -257,6 +284,7 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                         Targets::SecondScout => {
                             if combat.scout_formation.len() < 2
                                 || combat.scout_formation[1].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[1].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[1].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;
@@ -275,8 +303,9 @@ pub fn enemy_turn(combat: &mut Combat, app: &mut App) {
                             }
                         }
                         Targets::LeadScout => {
-                            if combat.scout_formation.len() < 1
+                            if combat.scout_formation.is_empty()
                                 || combat.scout_formation[0].ship.damage == ShipDamage::Destroyed
+                                || combat.scout_formation[0].ship.damage == ShipDamage::Inoperable
                                 || combat.scout_formation[0].pilot.status == PilotStatus::Kia
                             {
                                 app.hull_damage += 1;

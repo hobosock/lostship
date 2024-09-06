@@ -58,7 +58,7 @@ pub struct Pilot {
 impl Default for Pilot {
     fn default() -> Self {
         Pilot {
-            name: "Pilot".to_string(), // TODO: replace with name generation function
+            name: "Pilot".to_string(),
             kills: 0,
             rank: Rank::default(),
             status: PilotStatus::default(),
@@ -101,11 +101,7 @@ impl Pilot {
         if self.status == PilotStatus::Injured {
             match sick_bay.status {
                 Status::Normal => {
-                    if sick_bay.upgrade {
-                        self.status = PilotStatus::Normal;
-                        self.injury_timer = 0;
-                        return;
-                    } else if self.injury_timer > 0 {
+                    if sick_bay.upgrade || self.injury_timer > 0 {
                         self.status = PilotStatus::Normal;
                         self.injury_timer = 0;
                         return;

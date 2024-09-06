@@ -10,7 +10,7 @@
 
 use crate::app::App;
 
-use super::{roll, threat::Threats, ScanResult};
+use super::{roll, ship::Status, threat::Threats, ScanResult};
 
 /// enum for tracking which step of the jump the player is in
 #[derive(Debug, PartialEq)]
@@ -110,7 +110,7 @@ pub fn search_wreckage(threats: &[Threats]) -> u64 {
 }
 
 /// Step 5. scan the system
-pub fn system_scan(leaps: u64) -> (u64, ScanResult) {
+pub fn system_scan(leaps: u64, sensor_status: Status, upgraded: bool) -> (u64, ScanResult) {
     let roll_mod = if leaps == 1 {
         -3
     } else if leaps == 2 {
@@ -123,7 +123,20 @@ pub fn system_scan(leaps: u64) -> (u64, ScanResult) {
         1
     };
 
-    let system_scan = roll(6) + roll(6) + roll_mod;
+    let subsystem_mod = match sensor_status {
+        Status::Normal => {
+            if upgraded {
+                1
+            } else {
+                0
+            }
+        }
+        Status::Serviceable => -1,
+        Status::BarelyFunctioning => -2,
+        Status::Inoperable => -3,
+    };
+
+    let system_scan = roll(6) + roll(6) + roll_mod + subsystem_mod;
     if system_scan < 6 {
         (0, ScanResult::Barren)
     } else if system_scan == 6 || system_scan == 8 {

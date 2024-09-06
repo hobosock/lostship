@@ -11,7 +11,7 @@ use rand::Rng;
 use ratatui::{style::Stylize, text::Line};
 use threat::Threats;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ScanResult {
     Barren,
     Fuel,
@@ -55,7 +55,7 @@ impl Default for Leap {
 }
 
 impl Leap {
-    pub fn to_lines(self: &Self) -> Vec<Line> {
+    pub fn to_lines(&self) -> Vec<Line> {
         vec![
             Line::from(format!("LEAP: {}", self.number)).bold().cyan(),
             format!("Combat Rounds: {}", self.combat_rounds).into(),
