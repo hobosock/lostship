@@ -8,7 +8,7 @@
  * 7. leap again
  */
 
-use crate::app::App;
+use crate::{anomolies::anomoies, app::App};
 
 use super::{roll, ship::Status, threat::Threats, ScanResult};
 
@@ -110,7 +110,12 @@ pub fn search_wreckage(threats: &[Threats]) -> u64 {
 }
 
 /// Step 5. scan the system
-pub fn system_scan(leaps: u64, sensor_status: Status, upgraded: bool) -> (u64, ScanResult) {
+pub fn system_scan(
+    app: &mut App,
+    leaps: u64,
+    sensor_status: Status,
+    upgraded: bool,
+) -> (u64, ScanResult) {
     let roll_mod = if leaps == 1 {
         -3
     } else if leaps == 2 {
@@ -143,6 +148,7 @@ pub fn system_scan(leaps: u64, sensor_status: Status, upgraded: bool) -> (u64, S
         (1, ScanResult::Fuel)
     } else if system_scan == 7 {
         // TODO: anomaly
+        anomoies(app);
         (0, ScanResult::Anomoly)
     } else if system_scan == 9 {
         (2, ScanResult::Fuel)

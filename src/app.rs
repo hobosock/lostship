@@ -725,6 +725,7 @@ fn n_key_press(app: &mut App) {
                 }
                 JumpStep::Step5 => {
                     let (fuel, scan_result) = system_scan(
+                        app,
                         app.leaps_since_incident,
                         app.sensors.status,
                         app.sensors.upgrade,
