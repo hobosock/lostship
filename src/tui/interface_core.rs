@@ -89,7 +89,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     .highlight_style(Style::default().cyan().bold())
     .select(app.active_tab as usize);
     // main/center panel for display
-    let version = Title::from(Line::from(vec![" Lost Ship v0.1.1 ".into()]));
+    let version = Title::from(Line::from(vec![" Lost Ship v0.2.0 ".into()]));
     let main_block = Block::default()
         .title(
             Title::from(

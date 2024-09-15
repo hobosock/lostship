@@ -2,4 +2,4 @@
 pub const ABOUT_STR: &str = "Lost Ship is a single player table top game developed by W. M. Akers.  This program is an implementation of the original rules in Rust, mostly as an exercise to learn how to develop TUIs.  For full information about the game's rules and to purchase a copy yourself, please visit wmakers.net/lostship";
 
 /// string with version number
-pub const VER_STR: &str = "\n\nv0.1.1";
+pub const VER_STR: &str = "\n\nv0.2.0";

@@ -1,15 +1,14 @@
 use std::cmp::min;
 
-use crate::gamerules::threat::threats_to_fighters;
+use crate::gamerules::ship::Scout;
 
 use crate::{
     app::App,
     gamerules::{
-        combat::{enemy_targeting, scout_attack, subsystem_damage, Combat},
+        combat::{scout_attack, subsystem_damage},
         pilot::{PilotStatus, Rank},
         roll,
         ship::{ShipDamage, Status},
-        threat::Threats,
     },
 };
 
@@ -157,6 +156,13 @@ pub fn anomoies(app: &mut App) {
         app.game_text += "\nEncountered a healing field!  Hull fully repaired.";
         app.hull_damage = 0;
     } else {
-        // TODO: recover dead pilot and scout
+        if !app.honor_roll.is_empty() {
+            app.pilots.push(app.honor_roll.pop().unwrap()); // unwrap is ok?
+            if app.scouts.len() < 6 {
+                let mut new_scout = Scout::default();
+                new_scout.ship.new_name(&mut app.scouts_in_use);
+                app.scouts.push(new_scout);
+            }
+        }
     }
 }
